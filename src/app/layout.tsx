@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-import { Navbar, Footer, Chatbot } from "../../components";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,23 +15,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Codebaze Academy",
-  description: "Codebaze Academy – Your starting point for learning web development. Beginner-friendly, practical, and designed to help you build real projects from day one.",
+  description:
+    "Codebaze Academy – Your starting point for learning web development. Beginner-friendly, practical, and designed to help you build real projects from day one.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white min-h-screen`}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white min-h-screen`}
       >
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
-        <Chatbot />
+        {children}
+        {/* 🔔 Sonner Toaster */}
+        <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   );
