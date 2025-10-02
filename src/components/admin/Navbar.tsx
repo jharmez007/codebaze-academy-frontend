@@ -13,9 +13,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth"; 
 
 export default function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  // Get user initials (fallback: first 2 letters of email)
+  const getInitials = () => {
+    if (user?.name) {
+      return user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.slice(0, 2).toUpperCase();
+    }
+    return "AD"; // default
+  };
 
   return (
     <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 shadow-sm">
@@ -27,7 +45,7 @@ export default function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
         >
           <Menu className="h-5 w-5 text-gray-700 dark:text-gray-300" />
         </button>
-        
+
         <input
           type="text"
           placeholder="Search..."
@@ -50,10 +68,10 @@ export default function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <Avatar className="h-8 w-8">
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarFallback>{getInitials()}</AvatarFallback>
               </Avatar>
               <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-200">
-                Admin
+                {user?.name || "Admin"}
               </span>
             </Button>
           </DropdownMenuTrigger>
@@ -64,17 +82,17 @@ export default function Navbar({ onMenuClick }: { onMenuClick: () => void }) {
             <DropdownMenuItem onClick={() => router.push("/admin/profile")}>
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/admin/system-settings")}>
+            <DropdownMenuItem
+              onClick={() => router.push("/admin/system-settings")}
+            >
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem >
-              Billing
-            </DropdownMenuItem>
+            <DropdownMenuItem>Billing</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-red-600"
               onClick={() => {
-                // 🔜 replace with auth signOut() when backend is ready
+                logout(); 
                 router.push("/admin-login");
               }}
             >

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import course3 from "../../../../public/course3.jpg";
+import course3 from "../../../../../public/course3.jpg";
 
 export const metadata = {
   title: "CSS Mastery",

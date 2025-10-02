@@ -1,69 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import { courses } from "@/data/courses";
+import { useEffect, useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  getCourses,
+  deleteCourse as deleteCourseApi,
+  publishCourse as publishCourseApi,
+  Course,
+} from "@/services/courseService";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { MoreHorizontal } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { toast } from "sonner";
 
-export default function CoursesTable({ data }: { data: typeof courses }) {
+export default function CoursesTable() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 10;
+
+  // 🚀 Fetch courses from API
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    const result = await getCourses();
+    if (result.data) {
+      setCourses(result.data);
+    } else {
+      setError(result.message || "Failed to load courses");
+    }
+    setLoading(false);
+  };
 
   // 🔎 Filtering
-  const filtered = data.filter((c) => {
+  const filtered = courses.filter((c) => {
     const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase());
-
     const matchesStatus =
       statusFilter === "all"
         ? true
         : statusFilter === "published"
-        ? c.type === "dynamic"
-        : c.type !== "dynamic";
-
+        ? c.is_published 
+        : !c.is_published;
     return matchesSearch && matchesStatus;
   });
-
-  const deleteCourse = async (courseSlug: string) => {
-    const fakeDelete = new Promise((resolve) => {
-      setTimeout(() => resolve("deleted"), 1000);
-    });
-
-    try {
-      await fakeDelete;
-      window.location.href = "/admin/courses?deleted=1";
-    } catch (error) {
-      window.location.href = "/admin/courses?deleteError=1";
-    }
-  };
 
   // 📄 Pagination
   const totalPages = Math.ceil(filtered.length / pageSize);
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  // 🗑️ Delete course (real-time update + toast)
+  const handleDeleteCourse = async (id: number) => {
+    toast.promise(deleteCourseApi(id), {
+      loading: "Deleting course...",
+      success: () => {
+        setCourses((prev) => prev.filter((c) => c.id !== id));
+        return "Course deleted successfully";
+      },
+      error: (err) => err?.message || "Failed to delete course",
+    });
+  };
+
+  // 📢 Publish/Unpublish course (real-time update + toast)
+  const handleTogglePublish = async (course: Course) => {
+    const publish = course.is_published !== true;
+    toast.promise(publishCourseApi(course.id, publish), {
+      loading: publish ? "Publishing course..." : "Unpublishing course...",
+      success: () => {
+        setCourses((prev) =>
+          prev.map((c) =>
+            c.id === course.id
+              ? { ...c, is_published: publish ? true : false }
+              : c
+          )
+        );
+        return publish
+          ? "Course published successfully"
+          : "Course unpublished successfully";
+      },
+      error: (err) => err?.message || "Failed to update course status",
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -97,169 +128,92 @@ export default function CoursesTable({ data }: { data: typeof courses }) {
         </Select>
       </div>
 
+      {/* Loading & Error states */}
+      {loading && <p className="text-center py-6">Loading courses...</p>}
+      {error && <p className="text-center text-red-600 py-6">{error}</p>}
+
       {/* Desktop Table */}
-      <div className="hidden md:block rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Total Lessons</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginated.map((course) => (
-              <TableRow key={course.slug}>
-                <TableCell className="font-medium">{course.title}</TableCell>
-                <TableCell>${course.price}</TableCell>
-                <TableCell>{course.total}</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${
-                      course.type === "dynamic"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {course.type === "dynamic" ? "Published" : "Draft"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <a href={`/admin/courses/${course.slug}`}>Edit</a>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <a href={`/admin/courses/${course.slug}/lessons`}>
-                          Manage Lessons
-                        </a>
-                      </DropdownMenuItem>
-                      <ConfirmModal
-                        title="Delete Course"
-                        description="Are you sure you want to delete this course? This action cannot be undone."
-                        confirmLabel="Delete"
-                        cancelLabel="Cancel"
-                        onConfirm={() => deleteCourse(course.slug)}
-                        trigger={
-                          <button className="w-full text-left px-2 py-1.5 text-red-600 text-sm hover:bg-red-100 rounded-sm">
-                            Delete
+      {!loading && !error && (
+        <>
+          <div className="hidden md:block rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Total Lessons</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginated.map((course) => (
+                  <TableRow key={course.id}>
+                    <TableCell className="font-medium">{course.title}</TableCell>
+                    <TableCell>${course.price}</TableCell>
+                    <TableCell>{course.total_lessons}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          course.is_published
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {course.is_published ? "Published" : "Draft"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <MoreHorizontal className="h-5 w-5" />
                           </button>
-                        }
-                      />
-                      <DropdownMenuItem>
-                        {course.type === "dynamic" ? "Unpublish" : "Publish"}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-            {paginated.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-6">
-                  No courses found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Mobile Cards */}
-      <div className="grid gap-4 md:hidden">
-        {paginated.map((course) => (
-          <div
-            key={course.slug}
-            className="p-4 border rounded-lg bg-white shadow-sm space-y-2"
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="font-semibold">{course.title}</h3>
-              <span
-                className={`px-2 py-1 rounded text-xs font-medium ${
-                  course.type === "dynamic"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {course.type === "dynamic" ? "Published" : "Draft"}
-              </span>
-            </div>
-
-            <p className="text-sm text-gray-500">
-              ${course.price} • {course.total} lessons
-            </p>
-
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="w-full justify-center"
-              >
-                <a href={`/admin/courses/${course.slug}`}>Edit</a>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="w-full justify-center"
-              >
-                <a href={`/admin/courses/${course.slug}/lessons`}>
-                  Manage Lessons
-                </a>
-              </Button>
-              <ConfirmModal
-                title="Delete Course"
-                description="Are you sure you want to delete this course? This action cannot be undone."
-                confirmLabel="Delete"
-                cancelLabel="Cancel"
-                onConfirm={() => deleteCourse(course.slug)}
-                trigger={
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="w-full justify-center"
-                  >
-                    Delete
-                  </Button>
-                }
-              />
-            </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <a href={`/admin/courses/${course.id}`}>Edit</a>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <a href={`/admin/courses/${course.id}/lessons`}>
+                              Manage Lessons
+                            </a>
+                          </DropdownMenuItem>
+                          <ConfirmModal
+                            title="Delete Course"
+                            description="Are you sure you want to delete this course? This action cannot be undone."
+                            confirmLabel="Delete"
+                            cancelLabel="Cancel"
+                            onConfirm={() => handleDeleteCourse(course.id)}
+                            trigger={
+                              <button className="w-full text-left px-2 py-1.5 text-red-600 text-sm hover:bg-red-100 rounded-sm">
+                                Delete
+                              </button>
+                            }
+                          />
+                          <DropdownMenuItem
+                            onClick={() => handleTogglePublish(course)}
+                          >
+                            {course.is_published
+                              ? "Unpublish"
+                              : "Publish"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {paginated.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-6">
+                      No courses found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-end items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Previous
-          </Button>
-          <span className="text-sm">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </Button>
-        </div>
+        </>
       )}
     </div>
   );

@@ -1,21 +1,18 @@
 // src/components/admin/courses/LessonFields.tsx
 "use client";
 
-import { useFieldArray, Control, UseFormReturn } from "react-hook-form";
+import { useFieldArray, Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 type LessonFieldsProps = {
-  form: UseFormReturn<any>;
   control: Control<any>;
   sectionIndex: number;
-  slugify: (s: string) => string;
 };
 
-export function LessonFields({ form, control, sectionIndex, slugify }: LessonFieldsProps) {
+export function LessonFields({ control, sectionIndex, }: LessonFieldsProps) {
   const { fields: lessonFields, append, remove } = useFieldArray({
     control,
     name: `sections.${sectionIndex}.lessons`,
@@ -30,10 +27,6 @@ export function LessonFields({ form, control, sectionIndex, slugify }: LessonFie
         onClick={() =>
           append({
             title: "",
-            slug: "",
-            duration: "",
-            size: "",
-            type: "video",
           })
         }
       >
@@ -55,82 +48,9 @@ export function LessonFields({ form, control, sectionIndex, slugify }: LessonFie
                     {...field}
                     onChange={(e) => {
                       field.onChange(e);
-                      form.setValue(
-                        `sections.${sectionIndex}.lessons.${lessonIndex}.slug`,
-                        slugify(e.target.value),
-                        { shouldDirty: true }
-                      );
                     }}
                   />
                 </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Slug */}
-          <FormField
-            control={control}
-            name={`sections.${sectionIndex}.lessons.${lessonIndex}.slug`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Slug</FormLabel>
-                <FormControl>
-                  <Input placeholder="introduction" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Duration */}
-          <FormField
-            control={control}
-            name={`sections.${sectionIndex}.lessons.${lessonIndex}.duration`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Duration</FormLabel>
-                <FormControl>
-                  <Input placeholder="10 mins" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* File Size */}
-          <FormField
-            control={control}
-            name={`sections.${sectionIndex}.lessons.${lessonIndex}.size`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>File Size</FormLabel>
-                <FormControl>
-                  <Input placeholder="200 MB" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Type */}
-          <FormField
-            control={control}
-            name={`sections.${sectionIndex}.lessons.${lessonIndex}.type`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="video">Video</SelectItem>
-                    <SelectItem value="pdf">PDF</SelectItem>
-                  </SelectContent>
-                </Select>
                 <FormMessage />
               </FormItem>
             )}

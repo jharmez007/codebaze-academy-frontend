@@ -11,10 +11,8 @@ export const courses = [
     longDescription:
       "This comprehensive course covers everything you need to become a proficient frontend developer. You'll start with the basics of the web, move through HTML and CSS, and then dive deep into JavaScript.",
     image: course1,
-    total: 23,
-    completed: 2,
+    total: 28,
     price: "45",
-    type: "dynamic",
     sections: [
       {
         slug: "introduction-to-frontend-development",

@@ -1,7 +1,7 @@
 // src/components/admin/courses/SectionFields.tsx
 "use client";
 
-import { useFieldArray, Control, UseFormReturn } from "react-hook-form";
+import { useFieldArray, Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,12 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 type SectionFieldsProps = {
-  form: UseFormReturn<any>;
   control: Control<any>;
-  slugify: (s: string) => string;
 };
 
-export function SectionFields({ form, control, slugify }: SectionFieldsProps) {
+export function SectionFields({ control }: SectionFieldsProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "sections",
@@ -28,7 +26,7 @@ export function SectionFields({ form, control, slugify }: SectionFieldsProps) {
           {/* Section Title */}
           <FormField
             control={control}
-            name={`sections.${sectionIndex}.section`}
+            name={`sections.${sectionIndex}.name`}
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Section Title</FormLabel>
@@ -38,28 +36,8 @@ export function SectionFields({ form, control, slugify }: SectionFieldsProps) {
                     {...field}
                     onChange={(e) => {
                       field.onChange(e);
-                      form.setValue(
-                        `sections.${sectionIndex}.slug`,
-                        slugify(e.target.value),
-                        { shouldDirty: true }
-                      );
                     }}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Section Slug */}
-          <FormField
-            control={control}
-            name={`sections.${sectionIndex}.slug`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Slug</FormLabel>
-                <FormControl>
-                  <Input placeholder="html-essentials" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -93,7 +71,6 @@ export function SectionFields({ form, control, slugify }: SectionFieldsProps) {
         onClick={() =>
           append({
             section: "",
-            slug: "",
             description: "",
             lessons: [],
           })

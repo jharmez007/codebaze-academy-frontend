@@ -1,29 +1,24 @@
-import axios from "axios";
+// utils/refresh.js
+import axios from 'axios';
 
 const RefreshApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL, 
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
 });
 
-export async function refreshToken(): Promise<string> {
-  if (typeof window === "undefined") {
-    throw new Error("refreshToken can only run in the browser");
-  }
+export async function refreshToken() {
+  const refresh_token = localStorage.getItem('refresh_token');
+  console.log("refreshtoken:", refresh_token)
+  if (!refresh_token) throw new Error('No refresh token available');
 
-  const refresh_token = localStorage.getItem("refresh_token");
-  if (!refresh_token) throw new Error("No refresh token available");
-
-  const response = await RefreshApi.post("/auth/refresh", null, {
+  const response = await RefreshApi.post('/refresh', null, {
     headers: {
       Authorization: `Bearer ${refresh_token}`,
     },
   });
+  console.log("response:", response)
 
-  const newAccessToken: string | undefined = response?.data?.data?.access_token;
-
-  if (!newAccessToken) {
-    throw new Error("No access token returned from refresh");
-  }
-
-  localStorage.setItem("token", newAccessToken);
+  const newAccessToken = response?.data?.access_token;
+ 
+  localStorage.setItem('token', newAccessToken);
   return newAccessToken;
 }

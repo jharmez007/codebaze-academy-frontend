@@ -19,7 +19,7 @@ export const students = [
     id: "stu2",
     name: "Jane Smith",
     email: "jane@example.com",
-    courses: [{ title: "UI/UX Fundamentals", progress: 100 }],
+    courses: [{ title: "UI/UX Fundamentals", progress: 50 }],
     signupDate: "2025-02-05",
     status: "suspended",
     activity: [
