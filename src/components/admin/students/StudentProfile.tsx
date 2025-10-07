@@ -30,22 +30,22 @@ type Student = {
 
 export default function StudentProfile({ student }: { student: Student }) {
   return (
-    <div className="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
+    <div className="max-w-3xl mx-auto bg-white dark:bg-background shadow rounded-lg p-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center text-sm text-gray-500 mb-4">
+      <nav className="flex items-center text-sm  mb-4">
         <Link href="/admin/students" className="hover:underline">
           Students
         </Link>
         <ChevronRight className="w-4 h-4 mx-1" />
-        <span className="text-gray-700 font-medium">{student.name}</span>
+        <span className="font-medium">{student.name}</span>
       </nav>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">{student.name}</h1>
-          <p className="text-gray-600">{student.email}</p>
-          <p className="text-sm text-gray-500">
+          <p className="">{student.email}</p>
+          <p className="text-sm ">
             Joined {new Date(student.signupDate).toLocaleDateString()}
           </p>
         </div>
@@ -97,10 +97,10 @@ export default function StudentProfile({ student }: { student: Student }) {
             {student.courses.map((course, i) => (
               <div key={i}>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium ">
                     {course.title}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm ">
                     {course.progress}%
                   </span>
                 </div>
@@ -109,7 +109,7 @@ export default function StudentProfile({ student }: { student: Student }) {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">No courses enrolled.</p>
+          <p className=" text-sm">No courses enrolled.</p>
         )}
       </div>
 
@@ -133,8 +133,8 @@ export default function StudentProfile({ student }: { student: Student }) {
                   )}
                 </span>
                 <div>
-                  <p className="text-sm text-gray-700">{act.text}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm ">{act.text}</p>
+                  <p className="text-xs ">
                     {new Date(act.date).toLocaleDateString()}
                   </p>
                 </div>
@@ -142,7 +142,7 @@ export default function StudentProfile({ student }: { student: Student }) {
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500 text-sm">No recent activity.</p>
+          <p className=" text-sm">No recent activity.</p>
         )}
       </div>
     </div>

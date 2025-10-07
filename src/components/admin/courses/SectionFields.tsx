@@ -24,7 +24,9 @@ export function SectionFields({ control, courseId }: SectionFieldsProps) {
 
   const handleRemove = async (sectionId: number | undefined, index: number) => {
     if (!courseId) {
-      toast.error("Course ID not found. Please save the course first.");
+      // toast.error("Course ID not found. Please save the course first.");
+      remove(index);
+      toast.info("Unsaved section removed.");
       return;
     }
 

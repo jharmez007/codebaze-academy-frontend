@@ -65,7 +65,7 @@ export default function PromotionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 max-w-lg bg-white p-6 shadow rounded-lg"
+      className="space-y-4 max-w-lg bg-white dark:bg-background p-6 shadow rounded-lg"
     >
       <h2 className="text-lg font-semibold">
         {initialData ? "Edit Promotion" : "Create Promotion"}

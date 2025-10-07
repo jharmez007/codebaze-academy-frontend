@@ -9,9 +9,16 @@ import {
   brandingSettings as initialBranding,
   BrandingSettings,
 } from "@/data/settings";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 export default function BrandingTab() {
-   const [settings, setSettings] = useState<BrandingSettings>(initialBranding);
+  const [settings, setSettings] = useState<BrandingSettings>(initialBranding);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -105,20 +112,24 @@ export default function BrandingTab() {
           {/* Theme */}
           <div>
             <Label>Default Theme</Label>
-            <select
-              className="mt-2 w-full border rounded-md p-2"
+            <Select
               value={settings.theme}
-              onChange={(e) =>
+              onValueChange={(v) =>
                 setSettings((prev) => ({
                   ...prev,
-                  theme: e.target.value as BrandingSettings["theme"],
+                  theme: v as BrandingSettings["theme"],
                 }))
               }
             >
-              <option>Light</option>
-              <option>Dark</option>
-              <option>System</option>
-            </select>
+              <SelectTrigger className="mt-2 w-full">
+                <SelectValue placeholder="Select theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Light">Light</SelectItem>
+                <SelectItem value="Dark">Dark</SelectItem>
+                <SelectItem value="System">System</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Save Button */}

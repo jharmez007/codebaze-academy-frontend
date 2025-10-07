@@ -27,12 +27,16 @@ export function LessonFields({ control, sectionIndex, courseId }: LessonFieldsPr
 
   const handleRemoveLesson = async (lessonId: number | undefined, index: number) => {
     if (!courseId) {
-      toast.error("Course ID not found. Please save the course first.");
+      // toast.error("Course ID not found. Please save the course first.");
+      remove(index);
+      toast.info("Unsaved lesson removed.");
       return;
     }
 
     if (!sectionId) {
-      toast.error("Section ID not found. Please save the section first.");
+      // toast.error("Section ID not found. Please save the section first.");
+      remove(index);
+      toast.info("Unsaved lesson removed.");
       return;
     }
 

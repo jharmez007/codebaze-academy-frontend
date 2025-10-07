@@ -14,6 +14,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { Trash2 } from "lucide-react";
 
 import { SectionFields } from "./SectionFields";
 import { LessonFields } from "./LessonFields";
@@ -57,6 +58,11 @@ type CourseFormProps = {
 export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProps) {
   const [step, setStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(
+    defaultValues?.image && typeof defaultValues.image === "string"
+      ? defaultValues.image
+      : null
+  );
 
   const router = useRouter();
 
@@ -77,8 +83,17 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
 
   // ✅ Hydrate with defaults
   useEffect(() => {
-    if (defaultValues) reset(defaultValues);
-      console.log("defaults:", defaultValues )
+    if (defaultValues) {
+      const safeDefaults = {
+        ...defaultValues,
+        price: defaultValues.price !== undefined ? String(defaultValues.price) : "",
+      };
+      reset(safeDefaults);
+      // Set preview if editing and image is a string (URL)
+      if (safeDefaults.image && typeof safeDefaults.image === "string") {
+        setPreviewImage(safeDefaults.image);
+      }
+    }
   }, [defaultValues, reset]);
 
   // ---------------- Data Transformer ----------------
@@ -197,16 +212,58 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
               </FormItem>
             )} />
 
-            <FormField control={control} name="image" render={() => (
-              <FormItem>
-                <FormLabel>Course Image</FormLabel>
-                <FormControl>
-                  <Input type="file" accept="image/*"
-                    onChange={(e) => setValue("image", e.target.files?.[0] || null)} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+            <FormField
+              control={control}
+              name="image"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Course Image</FormLabel>
+                  <FormControl>
+                    <div>
+                      {previewImage ? (
+                        <div className="relative inline-block mb-2">
+                          <img
+                            src={previewImage}
+                            alt="Course"
+                            className="rounded-md border w-32 h-32 object-cover"
+                          />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-white rounded-full p-1 shadow hover:bg-red-100"
+                            onClick={() => {
+                              setPreviewImage(null);
+                              setValue("image", null);
+                            }}
+                            title="Remove image"
+                          >
+                            <Trash2 className="w-5 h-5 text-red-600" />
+                          </button>
+                        </div>
+                      ) : (
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setValue("image", file);
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (ev) => {
+                                setPreviewImage(ev.target?.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                            } else {
+                              setPreviewImage(null);
+                            }
+                          }}
+                        />
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button type="button" onClick={nextStep} className="bg-green-600 text-white">
               Next: Add Sections

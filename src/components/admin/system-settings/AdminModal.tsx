@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Admin } from "@/data/admins";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 type Props = {
   open: boolean;
@@ -23,12 +24,17 @@ export function AdminModal({ open, setOpen, onSave, admin }: Props) {
     active: true,
   });
 
+  // Add role state for shadcn Select
+  const [role, setRole] = useState<Admin["role"]>("Instructor");
+
   // Pre-fill form when editing
   useEffect(() => {
     if (admin) {
       setForm(admin);
+      setRole(admin.role);
     } else {
       setForm({ name: "", email: "", role: "Instructor", active: true });
+      setRole("Instructor");
     }
   }, [admin]);
 
@@ -67,16 +73,20 @@ export function AdminModal({ open, setOpen, onSave, admin }: Props) {
 
           <div>
             <Label>Role</Label>
-            <select
-              className="mt-1 w-full border rounded-md p-2"
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value as Admin["role"] })}
-            >
-              <option value="Super Admin">Super Admin</option>
-              <option value="Instructor">Instructor</option>
-              <option value="Support">Support</option>
-              <option value="Moderator">Moderator</option>
-            </select>
+            <Select value={role} onValueChange={(v) => {
+              setRole(v as Admin["role"]);
+              setForm({ ...form, role: v as Admin["role"] });
+            }}>
+              <SelectTrigger className="mt-2 w-full">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Super Admin">Super Admin</SelectItem>
+                <SelectItem value="Instructor">Instructor</SelectItem>
+                <SelectItem value="Support">Support</SelectItem>
+                <SelectItem value="Moderator">Moderator</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-between">
