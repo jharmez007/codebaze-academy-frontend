@@ -1,13 +1,19 @@
 // src/services/courseApi.ts
 import Api from "../api";
 
+// -----------------------------
+// Create / Edit Course API
+// -----------------------------
+
 export interface LessonPayload {
+  id: number;
   title: string;
   notes?: string;
   references?: string;
 }
 
 export interface SubcategoryPayload {
+  id: number;
   name: string;
   lessons: LessonPayload[];
   description: string;
@@ -102,7 +108,6 @@ export async function updateCourse<T = unknown>(
   }
 }
 
-
 // ✅ Get course by id
 export async function getCourseById(
   id: number
@@ -126,7 +131,7 @@ export async function getCourseById(
 
 
 // -----------------------------
-// Load Course API
+// Load Course Table API
 // -----------------------------
 
 export interface Course {
@@ -191,6 +196,51 @@ export async function publishCourse(
     };
   }
 }
+
+// -----------------------------
+// Delete Section
+// -----------------------------
+export async function deleteSection(
+  courseId: number,
+  sectionId: number
+): Promise<{ status?: number; message?: string }> {
+  try {
+    const response = await Api.delete(`/courses/${courseId}/sections/${sectionId}`);
+    return { status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
+
+// -----------------------------
+// Delete Lesson
+// -----------------------------
+export async function deleteLesson(
+  courseId: number,
+  sectionId: number,
+  lessonId: number
+): Promise<{ status?: number; message?: string }> {
+  try {
+    const response = await Api.delete(
+      `/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`
+    );
+    return { status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
 
 
 

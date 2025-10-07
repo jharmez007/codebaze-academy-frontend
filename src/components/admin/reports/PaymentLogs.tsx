@@ -13,19 +13,35 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { PaymentLogModal } from "./PaymentLogModal";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 export function PaymentLogs() {
   const [search, setSearch] = useState("");
   const [selectedLog, setSelectedLog] = useState<PaymentLog | null>(null);
   const [open, setOpen] = useState(false);
 
+  // 🔢 Pagination states
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  // 🔍 Filtered logs
   const filtered = paymentLogs.filter(
     (log) =>
       log.details.toLowerCase().includes(search.toLowerCase()) ||
       log.event.toLowerCase().includes(search.toLowerCase())
   );
+
+  // 📄 Paginate
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const getStatusBadge = (status: PaymentLog["status"]) => {
     switch (status) {
@@ -39,7 +55,7 @@ export function PaymentLogs() {
   };
 
   return (
-    <div className="mt-10">
+    <div className="mt-10 w-full">
       <h2 className="text-xl font-semibold mb-4">Payment Logs</h2>
 
       {/* Search bar */}
@@ -47,13 +63,17 @@ export function PaymentLogs() {
         <Input
           placeholder="Search events or details..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1); // reset to first page on new search
+          }}
           className="w-[280px]"
         />
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
-        <Table>
+      {/* Table wrapper for scroll */}
+      <div className="rounded-2xl border bg-card shadow-sm overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
               <TableHead>Timestamp</TableHead>
@@ -65,7 +85,7 @@ export function PaymentLogs() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {paginated.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={6}
@@ -75,7 +95,7 @@ export function PaymentLogs() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((log) => (
+              paginated.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="text-sm">{log.timestamp}</TableCell>
                   <TableCell className="text-sm">{log.provider}</TableCell>
@@ -99,6 +119,49 @@ export function PaymentLogs() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between mt-4 flex-wrap gap-3">
+        <div className="text-sm text-muted-foreground">
+          Page {page} of {totalPages || 1}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || totalPages === 0}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+
+          <Select
+            value={String(pageSize)}
+            onValueChange={(val) => {
+              setPageSize(Number(val));
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[90px]">
+              <SelectValue placeholder="Rows" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Modal */}

@@ -1,23 +1,64 @@
 // src/components/admin/courses/LessonFields.tsx
 "use client";
 
-import { useFieldArray, Control } from "react-hook-form";
+import { useFieldArray, Control, useWatch } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { deleteLesson } from "@/services/courseService"; 
 
 type LessonFieldsProps = {
   control: Control<any>;
   sectionIndex: number;
+  courseId?: number; // ✅ add courseId
 };
 
-export function LessonFields({ control, sectionIndex, }: LessonFieldsProps) {
+export function LessonFields({ control, sectionIndex, courseId }: LessonFieldsProps) {
   const { fields: lessonFields, append, remove } = useFieldArray({
     control,
     name: `sections.${sectionIndex}.lessons`,
     keyName: "fieldId",
   });
+
+  // ✅ Get current section id dynamically
+  const sectionId = useWatch({ control, name: `sections.${sectionIndex}.id` });
+
+  const handleRemoveLesson = async (lessonId: number | undefined, index: number) => {
+    if (!courseId) {
+      toast.error("Course ID not found. Please save the course first.");
+      return;
+    }
+
+    if (!sectionId) {
+      toast.error("Section ID not found. Please save the section first.");
+      return;
+    }
+
+    if (!lessonId) {
+      // For unsaved lessons, just remove locally
+      remove(index);
+      toast.info("Unsaved lesson removed.");
+      return;
+    }
+
+    const toastId = toast.loading("Removing lesson...");
+    try {
+      const res = await deleteLesson(courseId, sectionId, lessonId);
+      if (res.status === 200) {
+        remove(index);
+        toast.success("Lesson deleted successfully!");
+      } else {
+        toast.error(res.message || "Failed to delete lesson.");
+      }
+    } catch (err) {
+      console.error("Error deleting lesson:", err);
+      toast.error("An error occurred while deleting the lesson.");
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -46,9 +87,7 @@ export function LessonFields({ control, sectionIndex, }: LessonFieldsProps) {
                   <Input
                     placeholder="01 - Introduction"
                     {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                    }}
+                    onChange={(e) => field.onChange(e)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -56,7 +95,12 @@ export function LessonFields({ control, sectionIndex, }: LessonFieldsProps) {
             )}
           />
 
-          <Button type="button" variant="destructive" onClick={() => remove(lessonIndex)}>
+          {/* Remove Button */}
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => handleRemoveLesson(lesson.id, lessonIndex)} // ✅ API call
+          >
             Remove Lesson
           </Button>
         </Card>

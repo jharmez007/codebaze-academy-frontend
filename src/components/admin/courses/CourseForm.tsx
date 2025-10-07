@@ -30,11 +30,13 @@ const courseSchema = z.object({
   sections: z
     .array(
       z.object({
+        id: z.number().optional(),
         name: z.string().min(3, "Section title is required"),
         description: z.string().min(5, "Description is required"),
         lessons: z
           .array(
             z.object({
+              id: z.number().optional(),
               title: z.string().min(3, "Lesson title is required"),
             })
           )
@@ -70,24 +72,27 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
     },
   });
 
+
   const { control, handleSubmit, trigger, setValue, reset } = form;
 
   // ✅ Hydrate with defaults
   useEffect(() => {
     if (defaultValues) reset(defaultValues);
+      console.log("defaults:", defaultValues )
   }, [defaultValues, reset]);
 
   // ---------------- Data Transformer ----------------
   const buildApiPayload = (data: CourseSchema): CoursePayload => {
-    const files: Record<string, File> = {};
-    data.sections?.forEach((s, subIndex) => {
-      s.lessons?.forEach((l, lessonIndex) => {
-        const videoKey = `sub_${subIndex}_lesson_${lessonIndex}_video`;
-        const docKey = `sub_${subIndex}_lesson_${lessonIndex}_doc`;
-        if ((l as any).video) files[videoKey] = (l as any).video;
-        if ((l as any).doc) files[docKey] = (l as any).doc;
-      });
+  const files: Record<string, File> = {};
+
+  data.sections?.forEach((s, subIndex) => {
+    s.lessons?.forEach((l, lessonIndex) => {
+      const videoKey = `sub_${subIndex}_lesson_${lessonIndex}_video`;
+      const docKey = `sub_${subIndex}_lesson_${lessonIndex}_doc`;
+      if ((l as any).video) files[videoKey] = (l as any).video;
+      if ((l as any).doc) files[docKey] = (l as any).doc;
     });
+  });
 
     return {
       title: data.title.trim(),
@@ -95,16 +100,19 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
       long_description: data.long_description.trim(),
       price: Number(data.price),
       sections: (data.sections ?? []).map((s) => ({
+        id: Number(s.id), // ✅ preserve section id
         name: s.name.trim(),
+        description: s.description.trim(),
         lessons: (s.lessons ?? []).map((l) => ({
+          id: Number(l.id), // ✅ preserve lesson id
           title: l.title.trim(),
         })),
-        description: s.description.trim(),
       })),
       image: data.image || null,
       files,
     };
   };
+
 
   // ---------------- Step Navigation ----------------
   const nextStep = async () => {
@@ -127,7 +135,7 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
   const onSubmit = async (data: CourseSchema) => {
     setIsSaving(true);
     const toastId = toast.loading(isEdit ? "Updating course..." : "Creating course...");
-
+    
     try {
       const payload = buildApiPayload(data);
       const response = isEdit
@@ -212,7 +220,7 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
         <Form {...form}>
           <form className="space-y-6 max-w-3xl">
             <h2 className="text-xl font-semibold">Course Sections</h2>
-            <SectionFields control={control} />
+            <SectionFields control={control} courseId={id} />
             <div className="flex justify-between">
               <Button type="button" variant="outline" onClick={prevStep}>Back</Button>
               <Button type="button" onClick={nextStep} className="bg-green-600 text-white">
@@ -233,7 +241,7 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
                 <h3 className="font-bold">
                   {form.watch(`sections.${sectionIndex}.name`) || "Untitled Section"}
                 </h3>
-                <LessonFields control={control} sectionIndex={sectionIndex} />
+                <LessonFields control={control} sectionIndex={sectionIndex} courseId={id} />
               </Card>
             ))}
             <div className="flex justify-between">

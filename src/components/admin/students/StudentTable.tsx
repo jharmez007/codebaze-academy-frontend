@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link"; 
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 export type Course = {
@@ -50,7 +50,6 @@ export type Student = {
   activity: Activity[];
 };
 
-
 export default function StudentTable({ data }: { data: Student[] }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -59,17 +58,17 @@ export default function StudentTable({ data }: { data: Student[] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // 🔎 Filtering
   const filtered = data.filter((stu) => {
     const matchesSearch =
       stu.name.toLowerCase().includes(search.toLowerCase()) ||
       stu.email.toLowerCase().includes(search.toLowerCase());
-
     const matchesStatus =
       statusFilter === "all" ? true : stu.status === statusFilter;
-
     return matchesSearch && matchesStatus;
   });
 
+  // 🔢 Sorting
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === "name") {
       return sortOrder === "asc"
@@ -82,7 +81,7 @@ export default function StudentTable({ data }: { data: Student[] }) {
     }
   });
 
-  // Pagination logic
+  // 📄 Pagination
   const totalPages = Math.ceil(sorted.length / rowsPerPage);
   const paginated = sorted.slice(
     (currentPage - 1) * rowsPerPage,
@@ -107,7 +106,7 @@ export default function StudentTable({ data }: { data: Student[] }) {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setCurrentPage(1); // reset to first page when filtering
+            setCurrentPage(1);
           }}
           className="w-full sm:w-64"
         />
@@ -116,7 +115,7 @@ export default function StudentTable({ data }: { data: Student[] }) {
           <Select
             onValueChange={(val) => {
               setStatusFilter(val);
-              setCurrentPage(1); // reset when filter changes
+              setCurrentPage(1);
             }}
             defaultValue="all"
           >
@@ -135,7 +134,6 @@ export default function StudentTable({ data }: { data: Student[] }) {
               variant="outline"
               size="sm"
               onClick={() => toggleSort("name")}
-              className="flex-1 sm:flex-none"
             >
               Name <ArrowUpDown className="w-4 h-4 ml-2" />
             </Button>
@@ -143,7 +141,6 @@ export default function StudentTable({ data }: { data: Student[] }) {
               variant="outline"
               size="sm"
               onClick={() => toggleSort("signupDate")}
-              className="flex-1 sm:flex-none"
             >
               Signup Date <ArrowUpDown className="w-4 h-4 ml-2" />
             </Button>
@@ -176,7 +173,9 @@ export default function StudentTable({ data }: { data: Student[] }) {
                 <TableRow key={stu.id}>
                   <TableCell className="font-medium">{stu.name}</TableCell>
                   <TableCell>{stu.email}</TableCell>
-                  <TableCell>{stu.courses.map((c) => c.title).join(", ")}</TableCell>
+                  <TableCell>
+                    {stu.courses.map((c) => c.title).join(", ")}
+                  </TableCell>
                   <TableCell>
                     {new Date(stu.signupDate).toLocaleDateString()}
                   </TableCell>
@@ -200,7 +199,9 @@ export default function StudentTable({ data }: { data: Student[] }) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                            <Link href={`/admin/students/${stu.id}`}>View Profile</Link>
+                          <Link href={`/admin/students/${stu.id}`}>
+                            View Profile
+                          </Link>
                         </DropdownMenuItem>
 
                         {stu.status === "active" ? (
@@ -239,62 +240,47 @@ export default function StudentTable({ data }: { data: Student[] }) {
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 gap-3">
-          {/* Rows per page selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Rows per page:</span>
-            <Select
-              value={rowsPerPage.toString()}
-              onValueChange={(val) => {
-                setRowsPerPage(Number(val));
-                setCurrentPage(1); // reset page when changing rows
-              }}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Page navigation */}
-          <div className="flex justify-center items-center gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
-            >
-              Previous
-            </Button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={page === currentPage ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </Button>
-            ))}
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </div>
+      <div className="flex items-center justify-between mt-4 flex-wrap gap-3">
+        <div className="text-sm text-muted-foreground">
+          Page {currentPage} of {totalPages || 1}
         </div>
-      )}
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages || totalPages === 0}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+
+          <Select
+            value={String(rowsPerPage)}
+            onValueChange={(val) => {
+              setRowsPerPage(Number(val));
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[90px]">
+              <SelectValue placeholder="Rows" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   );
 }

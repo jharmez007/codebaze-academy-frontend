@@ -7,17 +7,50 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner"; 
+import { deleteSection } from "@/services/courseService"; 
 
 type SectionFieldsProps = {
   control: Control<any>;
+  courseId?: number;
 };
 
-export function SectionFields({ control }: SectionFieldsProps) {
+export function SectionFields({ control, courseId }: SectionFieldsProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "sections",
     keyName: "fieldId",
   });
+
+  const handleRemove = async (sectionId: number | undefined, index: number) => {
+    if (!courseId) {
+      toast.error("Course ID not found. Please save the course first.");
+      return;
+    }
+
+    if (!sectionId) {
+      // This section might not exist in backend yet
+      remove(index);
+      toast.info("Unsaved section removed.");
+      return;
+    }
+
+    const toastId = toast.loading("Removing section...");
+    try {
+      const res = await deleteSection(courseId, sectionId);
+      if (res.status === 200) {
+        remove(index);
+        toast.success("Section deleted successfully!");
+      } else {
+        toast.error(res.message || "Failed to delete section.");
+      }
+    } catch (err) {
+      console.error("Error deleting section:", err);
+      toast.error("An error occurred while deleting the section.");
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -31,13 +64,7 @@ export function SectionFields({ control }: SectionFieldsProps) {
               <FormItem>
                 <FormLabel>Section Title</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="HTML Essentials"
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                    }}
-                  />
+                  <Input placeholder="HTML Essentials" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -59,18 +86,25 @@ export function SectionFields({ control }: SectionFieldsProps) {
             )}
           />
 
-          <Button type="button" variant="destructive" onClick={() => remove(sectionIndex)}>
+          {/* Remove Button */}
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => handleRemove(section.id, sectionIndex)}
+          >
             Remove Section
           </Button>
         </Card>
       ))}
 
+      {/* Add Button */}
       <Button
         type="button"
         variant="outline"
         onClick={() =>
           append({
-            section: "",
+            id: undefined, // Not yet saved
+            name: "",
             description: "",
             lessons: [],
           })
