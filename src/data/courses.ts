@@ -1,9 +1,11 @@
+import { id } from "date-fns/locale";
 import course1 from "../../public/course1.jpg";
 import course2 from "../../public/course2.jpg";
 import course3 from "../../public/course3.jpg";
 
 export const courses = [
   {
+    id:8,
     slug: "frontend-foundations",
     title: "Frontend Foundations",
     description:
@@ -20,6 +22,7 @@ export const courses = [
         section: "Introduction to Frontend Development",
         lessons: [
           {
+            id: 11,
             slug: "welcome-course-overview",
             title: "00 - Welcome & Course Overview",
             duration: "5 mins",
@@ -43,6 +46,7 @@ export const courses = [
             ]
           },
           {
+            id: 32,
             slug: "what-is-frontend-development",
             title: "01 - What is Frontend Development?",
             duration: "8 mins",
@@ -61,6 +65,7 @@ export const courses = [
             ]
           },
           {
+            id: 33,
             slug: "setting-up-development-environment",
             title: "02 - Setting Up Your Development Environment",
             duration: "10 mins",
@@ -78,6 +83,7 @@ export const courses = [
         section: "HTML Essentials",
         lessons: [
           {
+            id: 12,
             slug: "html-syntax-structure",
             title: "03 - HTML Syntax & Structure",
             duration: "12 mins",
@@ -87,26 +93,7 @@ export const courses = [
             notes: { type: "pdf", url: "https://cdn.example.com/notes/html-syntax.pdf" },
             quizzes: []
           },
-          {
-            slug: "semantic-html-accessibility",
-            title: "04 - Semantic HTML & Accessibility",
-            duration: "14 mins",
-            size: "300 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/semantic-html.mp4" },
-            notes: null,
-            quizzes: []
-          },
-          {
-            slug: "forms-and-inputs",
-            title: "05 - Forms and Inputs",
-            duration: "13 mins",
-            size: "270 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/forms.mp4" },
-            notes: null,
-            quizzes: []
-          }
+          
         ]
       },
       {
@@ -115,6 +102,7 @@ export const courses = [
         section: "CSS Fundamentals",
         lessons: [
           {
+            id: 34,
             slug: "css-syntax-selectors",
             title: "06 - CSS Syntax & Selectors",
             duration: "11 mins",
@@ -125,6 +113,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 35,
             slug: "box-model-positioning",
             title: "07 - Box Model & Positioning",
             duration: "15 mins",
@@ -134,26 +123,7 @@ export const courses = [
             notes: null,
             quizzes: []
           },
-          {
-            slug: "flexbox-grid-layouts",
-            title: "08 - Flexbox & Grid Layouts",
-            duration: "18 mins",
-            size: "400 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/flexbox-grid.mp4" },
-            notes: null,
-            quizzes: []
-          },
-          {
-            slug: "responsive-design-media-queries",
-            title: "09 - Responsive Design & Media Queries",
-            duration: "16 mins",
-            size: "350 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/responsive.mp4" },
-            notes: null,
-            quizzes: []
-          }
+      
         ]
       },
       {
@@ -162,6 +132,7 @@ export const courses = [
         section: "JavaScript Basics",
         lessons: [
           {
+            id: 13,
             slug: "javascript-syntax-variables",
             title: "10 - JavaScript Syntax & Variables",
             duration: "13 mins",
@@ -171,36 +142,7 @@ export const courses = [
             notes: null,
             quizzes: []
           },
-          {
-            slug: "functions-control-flow",
-            title: "11 - Functions & Control Flow",
-            duration: "15 mins",
-            size: "310 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/functions.mp4" },
-            notes: null,
-            quizzes: []
-          },
-          {
-            slug: "dom-manipulation",
-            title: "12 - DOM Manipulation",
-            duration: "17 mins",
-            size: "360 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/dom.mp4" },
-            notes: null,
-            quizzes: []
-          },
-          {
-            slug: "events-user-interaction",
-            title: "13 - Events & User Interaction",
-            duration: "14 mins",
-            size: "290 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/events.mp4" },
-            notes: null,
-            quizzes: []
-          }
+    
         ]
       },
       {
@@ -209,6 +151,7 @@ export const courses = [
         section: "Version Control & Collaboration",
         lessons: [
           {
+            id: 14,
             slug: "introduction-to-git-github",
             title: "14 - Introduction to Git & GitHub",
             duration: "10 mins",
@@ -218,26 +161,7 @@ export const courses = [
             notes: null,
             quizzes: []
           },
-          {
-            slug: "basic-git-commands",
-            title: "15 - Basic Git Commands",
-            duration: "12 mins",
-            size: "240 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/git-commands.mp4" },
-            notes: null,
-            quizzes: []
-          },
-          {
-            slug: "collaborating-on-projects",
-            title: "16 - Collaborating on Projects",
-            duration: "13 mins",
-            size: "260 MB",
-            type: "video",
-            video: { type: "upload", url: "https://cdn.example.com/videos/git-collab.mp4" },
-            notes: null,
-            quizzes: []
-          }
+        
         ]
       },
       {
@@ -246,6 +170,7 @@ export const courses = [
         section: "Building Real Projects",
         lessons: [
           {
+            id: 20,
             slug: "project-portfolio-website",
             title: "17 - Project 1: Personal Portfolio Website",
             duration: "20 mins",
@@ -256,6 +181,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 22,
             slug: "project-blog-layout",
             title: "18 - Project 2: Responsive Blog Layout",
             duration: "22 mins",
@@ -266,6 +192,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 21,
             slug: "project-todo-list",
             title: "19 - Project 3: Interactive To-Do List",
             duration: "18 mins",
@@ -283,6 +210,7 @@ export const courses = [
         section: "Best Practices & Next Steps",
         lessons: [
           {
+            id: 15,
             slug: "web-performance-optimization",
             title: "20 - Web Performance & Optimization",
             duration: "12 mins",
@@ -293,6 +221,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 30,
             slug: "accessibility-seo-basics",
             title: "21 - Accessibility & SEO Basics",
             duration: "14 mins",
@@ -303,6 +232,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 31,
             slug: "preparing-advanced-frameworks",
             title: "22 - Preparing for Advanced Frameworks",
             duration: "10 mins",
@@ -317,6 +247,7 @@ export const courses = [
     ]
   },
   {
+    id:13,
     slug: "html-unlocked",
     title: "HTML Unlocked",
     description:
@@ -335,6 +266,7 @@ export const courses = [
         section: "Introduction",
         lessons: [
           {
+            id: 17,
             slug: "welcome-to-html",
             title: "00 - Welcome to HTML",
             duration: "5 mins",
@@ -352,6 +284,7 @@ export const courses = [
         section: "Core HTML",
         lessons: [
           {
+            id: 18,
             slug: "headings-paragraphs-text",
             title: "01 - Headings, Paragraphs, and Text",
             duration: "12 mins",
@@ -362,6 +295,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 19,
             slug: "links-and-images",
             title: "02 - Links and Images",
             duration: "10 mins",
@@ -372,6 +306,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 20,
             slug: "lists-and-tables",
             title: "03 - Lists and Tables",
             duration: "14 mins",
@@ -386,6 +321,7 @@ export const courses = [
     ]
   },
   {
+    id:12,
     slug: "css-mastery",
     title: "CSS Mastery",
     description:
@@ -404,6 +340,7 @@ export const courses = [
         section: "Introduction",
         lessons: [
           {
+            id: 16,
             slug: "css-setup",
             title: "00 - CSS Setup",
             duration: "4 mins",
@@ -421,6 +358,7 @@ export const courses = [
         section: "Core Styling",
         lessons: [
           {
+            id: 21,
             slug: "colors-fonts-text",
             title: "01 - Colors, Fonts, and Text",
             duration: "11 mins",
@@ -431,6 +369,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 22,
             slug: "box-model-spacing",
             title: "02 - Box Model and Spacing",
             duration: "13 mins",
@@ -441,6 +380,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 23,
             slug: "flexbox-basics",
             title: "03 - Flexbox Basics",
             duration: "15 mins",
@@ -458,6 +398,7 @@ export const courses = [
         section: "Advanced Layouts",
         lessons: [
           {
+            id: 24,
             slug: "css-grid",
             title: "04 - CSS Grid",
             duration: "17 mins",
@@ -468,6 +409,7 @@ export const courses = [
             quizzes: []
           },
           {
+            id: 25,
             slug: "responsive-design",
             title: "05 - Responsive Design",
             duration: "14 mins",

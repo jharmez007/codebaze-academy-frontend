@@ -242,6 +242,163 @@ export async function deleteLesson(
 }
 
 
+// -----------------------------
+// Lessons API
+// -----------------------------
+
+// ✅ Get course lesson by id
+export async function getCourseLessonById(
+  id: number
+): Promise<{
+  data?: Course;
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.get<Course>(`/courses/${id}/full`);
+    return { data: response.data, status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
+// ✅ Get lesson by id
+export async function getLessonById(
+  id: number
+): Promise<{
+  data?: Course;
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.get<Course>(`/courses/lessons/${id}`);
+    return { data: response.data, status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
+
+// -----------------------------
+// Update Course Lesson
+// -----------------------------
+export async function updateLesson(
+  courseId: number,
+  lessonId: number,
+  formData: FormData
+): Promise<{ status?: number; message?: string; data?: any }> {
+  try {
+    const response = await Api.put(
+      `/courses/${courseId}/lessons/${lessonId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return { status: response.status, data: response.data };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
+// -----------------------------
+// Quiz API
+// -----------------------------
+
+export async function addQuiz(
+  courseId: number,
+  lessonId: number,
+  payload: {
+    question: string;
+    options: string[];
+    correct_answer: string;
+    quiz_type: string;
+    explanation?: string;
+  }
+): Promise<{ status?: number; message?: string }> {
+  try {
+    const response = await Api.post(
+      `/courses/${courseId}/lessons/${lessonId}/add-quiz`,
+      payload
+    );
+    return { status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
+export async function updateQuiz(
+  quizzesId: number,
+  lessonId: number,
+  payload: {
+    question: string;
+    options: string[];
+    correct_answer: string;
+    quiz_type: string;
+    explanation?: string;
+  }
+): Promise<{ status?: number; message?: string }> {
+  try {
+    const response = await Api.put(
+      `courses/lessons/${lessonId}/quizzes/${quizzesId}`,
+      payload
+    );
+    return { status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
+// -----------------------------
+// Delete Quiz
+// -----------------------------
+export async function deleteQuiz(
+  quizzesId: number,
+  lessonId: number
+): Promise<{ status?: number; message?: string }> {
+  try {
+    const response = await Api.delete(
+      `courses/lessons/${lessonId}/quizzes/${quizzesId}`
+    );
+    return { status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
+    };
+  }
+}
+
 
 
 

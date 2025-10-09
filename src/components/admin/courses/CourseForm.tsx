@@ -55,12 +55,17 @@ type CourseFormProps = {
   id?: any;
 };
 
+const BASE_SERVER_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+
+
 export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProps) {
   const [step, setStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(
     defaultValues?.image && typeof defaultValues.image === "string"
-      ? defaultValues.image
+      ? defaultValues.image.startsWith("http")
+        ? defaultValues.image
+        : `${BASE_SERVER_URL}/${defaultValues.image}`
       : null
   );
 
@@ -89,9 +94,13 @@ export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProp
         price: defaultValues.price !== undefined ? String(defaultValues.price) : "",
       };
       reset(safeDefaults);
-      // Set preview if editing and image is a string (URL)
+      // Set preview if editing and image is a string (URL or path)
       if (safeDefaults.image && typeof safeDefaults.image === "string") {
-        setPreviewImage(safeDefaults.image);
+        setPreviewImage(
+          safeDefaults.image.startsWith("http")
+            ? safeDefaults.image
+            : `${BASE_SERVER_URL}/${safeDefaults.image}`
+        );
       }
     }
   }, [defaultValues, reset]);
