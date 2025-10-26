@@ -1,18 +1,19 @@
 "use client";
 import Link from "next/link";
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { useFullscreen } from "../context/FullscreenContext"; 
 
 const Breadcrumb = ({ items }: { items: { label: string; href?: string }[] }) => {
   const { fullscreen, toggleFullscreen } = useFullscreen(); 
 
   return (
-    <nav className="flex items-center justify-between text-sm text-gray-500 mb-4">
+    <nav className="flex items-center justify-between text-sm text-gray-500">
       {/* Breadcrumb items */}
       <div>
         {items.map((item, i) => (
           <span key={i}>
             {item.href ? (
-              <Link href={item.href} className="hover:underline text-gray-700">
+              <Link href={item.href} className="hover:text-black text-gray-700 transition ease-in">
                 {item.label}
               </Link>
             ) : (
@@ -26,9 +27,10 @@ const Breadcrumb = ({ items }: { items: { label: string; href?: string }[] }) =>
       {/* Fullscreen toggle button */}
       <button
         onClick={toggleFullscreen}
-        className="ml-4 px-2 py-1 text-xs border rounded text-gray-700 hover:bg-gray-100"
+        className="hidden lg:flex p-3 text-xs border rounded-md text-gray-700 hover:bg-gray-100"
+        title={fullscreen ? "Close Fullscreen" : "Open Fullscreen"}
       >
-        {fullscreen ? "Exit Fullscreen" : "Fullscreen"}
+        {fullscreen ? <Minimize2 className="w-4 h-4"  /> : <Maximize2 className="w-4 h-4"  />}
       </button>
     </nav>
   );

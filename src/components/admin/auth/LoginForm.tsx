@@ -4,30 +4,33 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { successToast, errorToast } from "@/lib/toast";
-import { login } from "@/services/authService"; // import your login API
+import { login as loginService } from "@/services/authService";
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function LoginForm() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data, status, message } = await login({
+      const { data, status, message } = await loginService({
         email: form.email,
         password: form.password,
       });
 
       if (status && status >= 200 && status < 300 && data) {
-        // ✅ Save token and user to localStorage
-        localStorage.setItem("token", data.access_token);
+        login(data.user, data.access_token);
+
         localStorage.setItem("refresh_token", data.refresh_token);
-        localStorage.setItem("user", JSON.stringify(data.user));
 
         successToast("Login successful!");
         router.push("/admin/dashboard");
@@ -55,16 +58,25 @@ export default function LoginForm() {
         />
       </div>
 
-      {/* Password */}
-      <div>
+      {/* Password with visibility toggle */}
+      <div className="relative">
         <Label>Password</Label>
         <Input
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Enter password"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
+          className="pr-10"
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-[32px] text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          tabIndex={-1}
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
       </div>
 
       {/* Submit */}
@@ -82,6 +94,7 @@ export default function LoginForm() {
         </a>
       </p>
 
+      {/* Sign up link */}
       <p className="text-sm text-center mt-3 text-gray-500 dark:text-gray-400">
         Don’t have an account?{" "}
         <a href="/admin-signup" className="text-green-600 hover:underline">

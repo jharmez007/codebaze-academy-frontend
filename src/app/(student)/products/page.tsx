@@ -130,7 +130,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="min-h-[75vh] bg-white">
+    <div className=" bg-white">
       <div className="p-6 bg-white max-w-5xl mx-auto">
         <h1 className="text-lg text-black font-semibold mb-4">Products</h1>
 

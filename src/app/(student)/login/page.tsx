@@ -4,23 +4,45 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { successToast, errorToast } from "@/lib/toast";
+import { login as loginService } from "@/services/authService";
+import { useAuth } from "@/context/AuthContext";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const { login } = useAuth();
 
   // Email validation
   const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const canLogin = isEmailValid && password.length > 0;
 
-  const handleLogin = (e: React.FormEvent) => {
+   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // You can add authentication logic here
-    router.push("/products");
-  };
+    try {
+        const { data, status, message } = await loginService({
+          email,
+          password,
+        });
+  
+        if (status && status >= 200 && status < 300 && data) {
+          login(data.user, data.access_token);
+
+          localStorage.setItem("refresh_token", data.refresh_token);
+
+          successToast("Login successful!");
+          router.push("/products");
+        } else {
+          errorToast(message || "Invalid credentials");
+        }
+      } catch (err: any) {
+        errorToast(err.message || "Something went wrong");
+      }
+    };
 
   return (
-    <div className="flex justify-center items-start min-h-[75vh] bg-white px-2">
+    <div className="flex justify-center items-start bg-white px-2">
       <div className="w-full max-w-xl sm:max-w-3xl md:max-w-5xl border border-gray-300 rounded-md bg-white p-4 sm:p-8 mt-6">
         <div className="w-full max-w-sm sm:max-w-lg mx-auto text-center">
           {/* Title */}
@@ -83,7 +105,7 @@ export default function LoginPage() {
           {/* Forgot Password */}
           <p className="mt-4 text-sm text-gray-600">
             Forgot your password?{" "}
-            <Link href="/reset-password" className="underline">
+            <Link href="/forgot-password" className="underline">
               Reset it.
             </Link>
           </p>

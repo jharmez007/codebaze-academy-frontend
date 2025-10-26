@@ -376,7 +376,7 @@ export default function LessonEditor({
           <label className="block text-sm font-medium mb-2">Upload Notes (PDF)</label>
           <Input type="file" accept="application/pdf" onChange={handleNotesChange} />
           {notesUrl && (
-            <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+            <div className="mt-4 p-4 border rounded-lg">
               <p className="text-sm font-medium">Notes uploaded:</p>
               <a
                 href={notesUrl}

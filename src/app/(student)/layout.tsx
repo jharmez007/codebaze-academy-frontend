@@ -2,6 +2,7 @@
 "use client";
 
 import { FullscreenProvider } from "@/context/FullscreenContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Navbar, Footer, Chatbot } from "@/components";
 
 export default function StudentLayout({
@@ -10,9 +11,10 @@ export default function StudentLayout({
   children: React.ReactNode;
 }) {
   return (
+    
     <FullscreenProvider>
       <Navbar />
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
       <Footer />
       <Chatbot />
     </FullscreenProvider>

@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/lib/toast";
 
+import { forgotPassword } from "@/services/authService";
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       errorToast("Please enter your email address.");
@@ -18,11 +20,18 @@ export default function ForgotPasswordPage() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      successToast("Password reset link sent to your email!");
-      setLoading(false);
-      setEmail("");
-    }, 1000); // Fake delay for UX
+    try {
+      const result = await forgotPassword({ email });
+  
+      if (result.status === 200) {
+        successToast("Password reset link sent to your email.");
+        setLoading(false);
+      } else {
+        errorToast(result.message || "Failed to send reset link.");
+      }
+    } catch (error) {
+      errorToast("An unexpected error occurred. Please try again.");
+    }
   };
 
   return (

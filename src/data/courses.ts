@@ -1,4 +1,3 @@
-import { id } from "date-fns/locale";
 import course1 from "../../public/course1.jpg";
 import course2 from "../../public/course2.jpg";
 import course3 from "../../public/course3.jpg";

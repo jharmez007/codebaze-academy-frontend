@@ -351,8 +351,8 @@ export async function addQuiz(
 }
 
 export async function updateQuiz(
-  quizzesId: number,
   lessonId: number,
+  quizzesId: number,
   payload: {
     question: string;
     options: string[];

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner"; // ✅ Toast notifications
 import {
   Table,
   TableBody,
@@ -25,8 +26,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MoreHorizontal,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+} from "lucide-react";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+
+// ✅ Services
+import { getStudents, suspendStudent } from "@/services/studentService";
 
 export type Course = {
   title: string;
@@ -41,7 +51,7 @@ export type Activity = {
 };
 
 export type Student = {
-  id: string;
+  id: number;
   name: string;
   email: string;
   courses: Course[];
@@ -50,7 +60,9 @@ export type Student = {
   activity: Activity[];
 };
 
-export default function StudentTable({ data }: { data: Student[] }) {
+export default function StudentTable() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"name" | "signupDate">("name");
@@ -58,8 +70,65 @@ export default function StudentTable({ data }: { data: Student[] }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // 🔹 Load students on mount
+  useEffect(() => {
+    async function fetchStudents() {
+      try {
+        setLoading(true);
+        const res = await getStudents();
+        if (res.data) {
+          const formatted = res.data.map((stu: any) => ({
+            id: stu.id,
+            name: stu.name,
+            email: stu.email,
+            courses:
+              typeof stu.courses === "string"
+                ? stu.courses.split(",").map((t: string) => ({ title: t.trim(), progress: 0 }))
+                : stu.courses,
+            signupDate: stu.date,
+            status: stu.is_suspended ? "suspended" : "active",
+            activity: [],
+          }));
+          setStudents(formatted);
+        } else {
+          toast.error(res.message || "Failed to load students");
+        }
+      } catch (err) {
+        toast.error("An unexpected error occurred while loading students");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStudents();
+  }, []);
+
+  // 🔹 Suspend / Reactivate student
+  const handleSuspend = async (id: number, suspend: boolean, name: string) => {
+    try {
+      const res = await suspendStudent(id, suspend);
+      if (res.status && res.status < 300) {
+        toast.success(
+          suspend
+            ? `${name} has been suspended`
+            : `${name} has been reactivated`
+        );
+        setStudents((prev) =>
+          prev.map((s) =>
+            s.id === id
+              ? { ...s, status: suspend ? "suspended" : "active" }
+              : s
+          )
+        );
+      } else {
+        toast.error(res.message || "Action failed");
+      }
+    } catch {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
   // 🔎 Filtering
-  const filtered = data.filter((stu) => {
+  const filtered = students.filter((stu) => {
     const matchesSearch =
       stu.name.toLowerCase().includes(search.toLowerCase()) ||
       stu.email.toLowerCase().includes(search.toLowerCase());
@@ -76,8 +145,10 @@ export default function StudentTable({ data }: { data: Student[] }) {
         : b.name.localeCompare(a.name);
     } else {
       return sortOrder === "asc"
-        ? new Date(a.signupDate).getTime() - new Date(b.signupDate).getTime()
-        : new Date(b.signupDate).getTime() - new Date(a.signupDate).getTime();
+        ? new Date(a.signupDate).getTime() -
+            new Date(b.signupDate).getTime()
+        : new Date(b.signupDate).getTime() -
+            new Date(a.signupDate).getTime();
     }
   });
 
@@ -148,7 +219,7 @@ export default function StudentTable({ data }: { data: Student[] }) {
         </div>
       </div>
 
-      {/* Table wrapper for horizontal scroll on mobile */}
+      {/* Table */}
       <div className="overflow-x-auto">
         <Table className="min-w-[700px]">
           <TableHeader>
@@ -161,81 +232,71 @@ export default function StudentTable({ data }: { data: Student[] }) {
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {paginated.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500">
-                  No students found
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginated.map((stu) => (
-                <TableRow key={stu.id}>
-                  <TableCell className="font-medium">{stu.name}</TableCell>
-                  <TableCell>{stu.email}</TableCell>
-                  <TableCell>
-                    {stu.courses.map((c) => c.title).join(", ")}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(stu.signupDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        stu.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {stu.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/admin/students/${stu.id}`}>
-                            View Profile
-                          </Link>
-                        </DropdownMenuItem>
 
-                        {stu.status === "active" ? (
-                          <ConfirmModal
-                            trigger={
-                              <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-gray-100 rounded-sm">
-                                Suspend
-                              </button>
-                            }
-                            title="Suspend Student"
-                            description={`Are you sure you want to suspend ${stu.name}?`}
-                            confirmLabel="Suspend"
-                            onConfirm={() => alert(`Suspended ${stu.name}`)}
-                          />
-                        ) : (
-                          <ConfirmModal
-                            trigger={
-                              <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-gray-100 rounded-sm">
-                                Reactivate
-                              </button>
-                            }
-                            title="Reactivate Student"
-                            description={`Are you sure you want to reactivate ${stu.name}?`}
-                            confirmLabel="Reactivate"
-                            onConfirm={() => alert(`Reactivated ${stu.name}`)}
-                          />
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
+          <TableBody>
+  {loading ? (
+    <TableRow>
+      <TableCell colSpan={6} className="text-center text-gray-500 py-10">
+        <div className="flex justify-center items-center gap-2">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          Loading students...
+        </div>
+      </TableCell>
+    </TableRow>
+  ) : students.length === 0 ? (
+    // 🧩 No students registered at all
+    <TableRow>
+      <TableCell colSpan={6} className="text-center text-gray-500 py-10">
+        <div className="flex flex-col items-center justify-center gap-2">
+          <p className="text-base font-medium">No students registered yet</p>
+          <p className="text-sm text-muted-foreground">
+            Once students sign up, they’ll appear here.
+          </p>
+        </div>
+      </TableCell>
+    </TableRow>
+  ) : paginated.length === 0 ? (
+    // 🔎 No results for filters/search
+    <TableRow>
+      <TableCell colSpan={6} className="text-center text-gray-500 py-10">
+        <div className="flex flex-col items-center justify-center gap-2">
+          <p className="text-base font-medium">No matching students found</p>
+          <p className="text-sm text-muted-foreground">
+            Try adjusting your search or filters.
+          </p>
+        </div>
+      </TableCell>
+    </TableRow>
+  ) : (
+    // ✅ Normal rendering
+    paginated.map((stu) => (
+      <TableRow key={stu.id}>
+        <TableCell className="font-medium">{stu.name}</TableCell>
+        <TableCell>{stu.email}</TableCell>
+        <TableCell>{stu.courses.map((c) => c.title).join(", ")}</TableCell>
+        <TableCell>
+          {new Date(stu.signupDate).toLocaleDateString()}
+        </TableCell>
+        <TableCell>
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              stu.status === "active"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {stu.status}
+          </span>
+        </TableCell>
+        <TableCell className="text-right">
+          {/* Actions */}
+          ...
+        </TableCell>
+      </TableRow>
+    ))
+  )}
+</TableBody>
+
         </Table>
       </div>
 
@@ -257,7 +318,9 @@ export default function StudentTable({ data }: { data: Student[] }) {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() =>
+              setCurrentPage((p) => Math.min(totalPages, p + 1))
+            }
             disabled={currentPage === totalPages || totalPages === 0}
           >
             <ChevronRight className="w-4 h-4" />
