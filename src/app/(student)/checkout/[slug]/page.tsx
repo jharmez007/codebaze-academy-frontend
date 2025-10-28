@@ -10,6 +10,16 @@ import { enroll, enrollRequest } from "@/services/enrollmentService";
 import { login as loginService, verifyToken, forgotPassword } from "@/services/authService";
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
 import { useAuth } from "@/context/AuthContext";
+import { useCurrency } from "@/hooks/useCurency";
+
+const CoursePrice = ({ price }: { price: number }) => {
+  const displayPrice = useCurrency(price);
+  return (
+    <>
+      {price === 0 ? "Free" : displayPrice}
+    </>
+  );
+};
 
 
 export default function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -231,7 +241,7 @@ const handleLogout = () => {
   return (
     <div className="bg-white py-12 text-black px-6">
       <h1 className="text-xl md:text-2xl font-bold mb-8 text-center">Sign Up</h1>
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Section */}
         <div className="lg:col-span-2 space-y-6">
           {/* Contact Info */}
@@ -403,12 +413,11 @@ const handleLogout = () => {
             <div>
               <p className="text-sm font-medium text-gray-700">Course</p>
               <p className="font-semibold text-gray-900">{course.title}</p>
-              <p className="text-sm text-gray-600">{course.price === 0 ? 'Free' : `₦${Number(course.price).toLocaleString()}`}</p>
+              <p className="text-sm text-gray-600"><CoursePrice price={course.price} /></p>
             </div>
           </div>
 
          {course.price > 0 && (() => {
-            const formattedPrice = Number(course.price).toLocaleString();
             return (
               <>
                 {/* Discount */}
@@ -427,11 +436,11 @@ const handleLogout = () => {
                 <div className="border-t border-gray-300 pt-4 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span>₦{formattedPrice}</span>
+                    <span><CoursePrice price={course.price} /></span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Total</span>
-                    <span>₦{formattedPrice}</span>
+                    <span><CoursePrice price={course.price} /></span>
                   </div>
                 </div>
 
@@ -440,7 +449,7 @@ const handleLogout = () => {
                   <span>Due now</span>
                   <span className="text-gray-900">
                     <span className="bg-gray-200 font-extralight p-1 rounded-md">NGN</span>{" "}
-                    ₦{formattedPrice}
+                    <CoursePrice price={course.price} />
                   </span>
                 </div>
               </>
@@ -471,11 +480,11 @@ const handleLogout = () => {
           {/* Terms */}
           <p className="mt-3 text-xs text-gray-500">
             By clicking "Get now" you agree to the{" "}
-            <a href="#" className="underline hover:text-gray-700">
+            <a href="/terms" className="underline hover:text-gray-700">
               Terms of Service
             </a>{" "}
             and{" "}
-            <a href="#" className="underline hover:text-gray-700">
+            <a href="/privacy" className="underline hover:text-gray-700">
               Privacy Policy
             </a>
             .

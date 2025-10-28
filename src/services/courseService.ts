@@ -136,6 +136,7 @@ export async function getCourseById(
 
 export interface Course {
   id: number;
+  created_at: string;
   slug: string;
   title: string;
   price: number;

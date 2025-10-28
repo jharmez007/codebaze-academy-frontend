@@ -9,6 +9,16 @@ import { ScrollNavbar } from "../../../../components";
 import { SquarePlay, NotebookText } from "lucide-react";
 import { getCourseById, getCourses, Course } from "@/services/studentCourseService";
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
+import { useCurrency } from "@/hooks/useCurency";
+
+const CoursePrice = ({ price }: { price: number }) => {
+  const displayPrice = useCurrency(price);
+  return (
+    <div className="mb-1 text-[#00bf63] text-lg font-semibold">
+      {price === 0 ? "Free" : displayPrice}
+    </div>
+  );
+};
 
 
 /** ✅ Converts seconds to minutes (rounded up) */
@@ -100,7 +110,7 @@ export default function CoursePage() {
       <div className="w-full py-8 md:py-16 bg-gray-200">
         <div className="max-w-5xl mx-auto px-4 md:px-6 flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12">
           <div className="w-full md:w-2/3">
-            <p className="text-[#00bf63] font-semibold mb-1">{course.price === 0 ? 'Free' : `₦${Number(course.price).toLocaleString()}`}</p>
+            <CoursePrice price={course.price} />
             <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">
               {course.title}
             </h1>

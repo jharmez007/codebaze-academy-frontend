@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { getCourses, Course } from "../../../../services/studentCourseService";
 import { createPassword } from "../../../../services/authService";
 import { useAuth } from "@/context/AuthContext";
+import { infoToast } from "@/lib/toast";
 
 export default function CreateAccountPage() {
   const [name, setName] = useState("");
@@ -42,7 +43,7 @@ export default function CreateAccountPage() {
     if (!canSubmit || !course) return;
 
     if (!token) {
-      alert("You must verify your email first.");
+      infoToast("You must verify your email first.");
       return;
     }
 

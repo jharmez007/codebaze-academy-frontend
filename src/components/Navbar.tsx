@@ -48,7 +48,7 @@ const Navbar = () => {
 
   // ✅ Determine container width dynamically
   const containerWidth =
-    pathname.startsWith("/course") ? "max-w-7xl" : "max-w-5xl";
+    pathname.startsWith("/course") || pathname.startsWith("/checkout") ? "max-w-7xl" : "max-w-5xl";
 
   // ✅ Logout function
   const handleLogout = () => {
@@ -101,7 +101,9 @@ const Navbar = () => {
               Blog
             </Link>
             <Link
-              href="/about"
+              href="https://www.youtube.com/@codebaze-tv"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm tracking-wide uppercase font-extralight transition duration-150 ease-in-out text-white hover:text-[#00bf63]"
             >
               YouTube
@@ -184,7 +186,7 @@ const Navbar = () => {
               <div className="relative hidden md:block" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen((prev) => !prev)}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E5C9A8] text-sm font-bold text-gray-800"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-[#E5C9A8] text-sm font-bold text-gray-800 cursor-pointer hover:scale-105 transition-transform"
                 >
                   {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
                 </button>
@@ -199,7 +201,7 @@ const Navbar = () => {
                       Products
                     </Link>
                     <Link
-                      href="/settings"
+                      href="/profile-settings"
                       onClick={() => setDropdownOpen(false)}
                       className="block px-4 py-2 hover:bg-gray-100 text-gray-800"
                     >
@@ -246,7 +248,7 @@ const Navbar = () => {
         </Link>
 
         <Link
-          href="/about"
+          href="https://www.youtube.com/@codebaze-tv"
           className="block px-3 py-2 font-medium hover:bg-gray-100 text-gray-700"
         >
           YouTube
@@ -264,7 +266,7 @@ const Navbar = () => {
               Products
             </Link>
             <Link
-              href="/settings"
+              href="/profile-settings"
               onClick={() => setIsOpen(false)}
               className="block px-3 py-2 font-medium hover:bg-gray-100 text-gray-700"
             >

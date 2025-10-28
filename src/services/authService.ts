@@ -28,9 +28,9 @@ export async function login(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -69,9 +69,9 @@ export async function register(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -105,9 +105,9 @@ export async function verifyToken(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -129,9 +129,9 @@ export async function createPassword(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -154,9 +154,9 @@ export async function forgotPassword(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -174,9 +174,9 @@ export async function verifyResetToken(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -193,9 +193,9 @@ export async function resetPassword(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -209,9 +209,9 @@ export async function sendVerificationOTP(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }

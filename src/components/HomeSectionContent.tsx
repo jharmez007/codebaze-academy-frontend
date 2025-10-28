@@ -6,6 +6,16 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { getCourses, Course } from "../services/studentCourseService";
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
+import { useCurrency } from "@/hooks/useCurency";
+
+const CoursePrice = ({ price }: { price: number }) => {
+  const displayPrice = useCurrency(price);
+  return (
+    <div className="mb-1 text-[#00bf63] font-semibold text-lg">
+      {price === 0 ? "Free" : displayPrice}
+    </div>
+  );
+};
 
 
 const HomeSectionContent = () => {
@@ -19,12 +29,17 @@ const HomeSectionContent = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const { data } = await getCourses();
-      if (data && data.length > 0) {
-        setCourses(data);
-        localStorage.setItem("courses", JSON.stringify(data));
-      }
-    };
+    const { data } = await getCourses();
+    if (data && data.length > 0) {
+      // Sort courses from latest to oldest
+      const sortedData = data.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setCourses(sortedData);
+      localStorage.setItem("courses", JSON.stringify(sortedData));
+    }
+  };
     fetchCourses();
   }, []);
 
@@ -58,7 +73,7 @@ const HomeSectionContent = () => {
             >
               {/* Course Image */}
               <div className="w-full md:w-2/3">
-                <Link href={`/course-content/${course.slug}`} prefetch>
+                <Link href={`/lesson-content/${course.slug}`} prefetch>
                   <Image
                     src={normalizeImagePath(course.image as any)}
                     alt={course.title}
@@ -72,10 +87,8 @@ const HomeSectionContent = () => {
 
               {/* Course Info */}
               <div className="w-full md:w-2/3 text-center md:text-left">
-                <div className="mb-1 text-[#00bf63] font-semibold text-lg">
-                  {course.price === 0 ? 'Free' : `₦${Number(course.price).toLocaleString()}`}
-                </div>
-                <Link href={`/course-content/${course.slug}`} prefetch>
+                <CoursePrice price={course.price} />
+                <Link href={`/lesson-content/${course.slug}`} prefetch>
                   <h3
                     className="text-xl md:text-4xl font-bold text-black transition-all duration-200 cursor-pointer hover:underline"
                     style={{
@@ -86,11 +99,11 @@ const HomeSectionContent = () => {
                     {course.title}
                   </h3>
                 </Link>
-                <p className="my-4 md:my-8 max-w-sm text-gray-600">
+                <p className="my-4 md:my-6 max-w-sm md:text-lg text-gray-600">
                   {course.description}
                 </p>
                 <Link
-                  href={`/course-content/${course.slug}`}
+                  href={`/lesson-content/${course.slug}`}
                   prefetch
                   className="inline-block px-6 py-3 bg-[#00bf63] text-white font-semibold rounded-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
                 >

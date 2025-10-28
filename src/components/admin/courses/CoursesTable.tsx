@@ -40,15 +40,21 @@ export default function CoursesTable() {
   }, []);
 
   const fetchCourses = async () => {
-    setLoading(true);
-    const result = await getCourses();
-    if (result.data) {
-      setCourses(result.data);
-    } else {
-      setError(result.message || "Failed to load courses");
-    }
-    setLoading(false);
-  };
+  setLoading(true);
+  const result = await getCourses();
+  if (result.data) {
+    // Sort courses from latest to oldest
+    const sortedCourses = result.data.sort(
+      (a: Course, b: Course) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    setCourses(sortedCourses);
+  } else {
+    setError(result.message || "Failed to load courses");
+  }
+  setLoading(false);
+};
+
 
   // 🔎 Filtering
   const filtered = courses.filter((c) => {
