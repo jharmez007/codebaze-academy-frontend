@@ -1,3 +1,4 @@
+
 export const metadata = {
   title: "Settings",
   description: "Manage your profile settings and preferences.",

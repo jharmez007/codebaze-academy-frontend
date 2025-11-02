@@ -40,9 +40,9 @@ export async function getCourses(): Promise<{
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -61,9 +61,9 @@ export async function getCourseById(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }

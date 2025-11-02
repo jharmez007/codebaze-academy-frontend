@@ -45,6 +45,8 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
 
    useEffect(() => {
     const fetchCourse = async () => {
+      const startTime = Date.now();
+
       try {
         // 1️⃣ Get all courses
         const { data: allCourses } = await getCourses();
@@ -62,21 +64,84 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
         console.error("Error loading course:", err);
         notFound();
       } finally {
-        setLoading(false);
+        // 🕒 Ensure loading lasts at least 1 second
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(1000 - elapsed, 0);
+        setTimeout(() => setLoading(false), remaining);
       }
     };
 
     fetchCourse();
   }, [slug]);
 
-  // Early loading skeleton
+    // Early loading skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex justify-center items-center text-gray-600">
-        Loading to checkout...
+      <div className="bg-white flex justify-center items-center py-12 px-6">
+        <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-3 gap-8 animate-pulse">
+          {/* Left section skeleton */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="border border-gray-200 rounded-lg p-6">
+              <div className="h-5 bg-gray-200 rounded w-32 mb-6"></div>
+
+              {/* Email input skeleton */}
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-10 bg-gray-200 rounded"></div>
+                <div className="flex justify-end">
+                  <div className="h-8 bg-gray-200 rounded w-24"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right section skeleton */}
+          <div className="border border-gray-200 rounded-lg p-6 space-y-6">
+            {/* Course Summary */}
+            <div className="flex items-start space-x-4">
+              <div className="w-20 h-20 bg-gray-200 rounded-md"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-5 bg-gray-200 rounded w-32"></div>
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+              </div>
+            </div>
+
+            {/* Discount */}
+            <div className="flex gap-2">
+              <div className="flex-1 h-10 bg-gray-200 rounded"></div>
+              <div className="w-20 h-10 bg-gray-200 rounded"></div>
+            </div>
+
+            {/* Totals */}
+            <div className="border-t border-gray-200 pt-4 space-y-2">
+              <div className="flex justify-between">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-4 bg-gray-200 rounded w-12"></div>
+              </div>
+              <div className="flex justify-between">
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-gray-200 rounded w-12"></div>
+              </div>
+            </div>
+
+            {/* Due now */}
+            <div className="flex justify-between items-center mt-4">
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <div className="h-6 bg-gray-200 rounded w-20"></div>
+            </div>
+
+            {/* Pay button */}
+            <div className="h-10 bg-gray-200 rounded mt-4"></div>
+
+            {/* Terms */}
+            <div className="h-3 bg-gray-200 rounded w-3/4 mt-2"></div>
+          </div>
+        </div>
       </div>
     );
   }
+
 
   if (!course) return notFound();
 
@@ -235,8 +300,6 @@ const handleLogout = () => {
     logout();
     setEmail("");
   };
-
-
 
   return (
     <div className="bg-white py-12 text-black px-6">

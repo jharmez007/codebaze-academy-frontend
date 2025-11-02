@@ -12,8 +12,8 @@ export async function enroll(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -35,9 +35,9 @@ export async function enrollRequest(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }

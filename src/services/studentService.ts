@@ -17,7 +17,7 @@ export async function getStudents() {
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.message || error.message,
+        error?.response?.data?.error || error.error,
     };
   }
 }
@@ -30,7 +30,7 @@ export async function getStudentById(id: number) {
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.message || error.message,
+        error?.response?.data?.error || error.error,
     };
   }
 }
@@ -45,7 +45,7 @@ export async function suspendStudent(id: number, suspend: boolean) {
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.message || error.message,
+        error?.response?.data?.error || error.error,
     };
   }
 }

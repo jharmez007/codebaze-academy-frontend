@@ -48,7 +48,7 @@ const Navbar = () => {
 
   // ✅ Determine container width dynamically
   const containerWidth =
-    pathname.startsWith("/course") || pathname.startsWith("/checkout") ? "max-w-7xl" : "max-w-5xl";
+    pathname.startsWith("/course") || pathname.startsWith("/checkout") || pathname.startsWith("/profile-settings") ? "max-w-7xl" : "max-w-5xl";
 
   // ✅ Logout function
   const handleLogout = () => {

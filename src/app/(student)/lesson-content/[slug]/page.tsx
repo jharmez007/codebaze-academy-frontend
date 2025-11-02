@@ -43,65 +43,101 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCourse = async () => {
-      try {
-        const cachedCourses = localStorage.getItem("courses");
-        let matchedCourse: Course | undefined;
+  const fetchCourse = async () => {
+    const startTime = Date.now();
 
-        if (cachedCourses) {
-          const parsed = JSON.parse(cachedCourses);
-          matchedCourse = parsed.find((c: Course) => c.slug === slug);
-        }
+    try {
+      const cachedCourses = localStorage.getItem("courses");
+      let matchedCourse: Course | undefined;
 
-        if (!matchedCourse) {
-          const { data: allCourses } = await getCourses();
-          matchedCourse = allCourses?.find((c) => c.slug === slug);
-        }
-
-        if (!matchedCourse) {
-          setCourse(null);
-          setLoading(false);
-          return;
-        }
-
-        const { data: fullCourse } = await getCourseById(matchedCourse.id);
-        setCourse(fullCourse || matchedCourse);
-      } catch (err) {
-        console.error("Error loading course:", err);
-        setCourse(null);
-      } finally {
-        setLoading(false);
+      if (cachedCourses) {
+        const parsed = JSON.parse(cachedCourses);
+        matchedCourse = parsed.find((c: Course) => c.slug === slug);
       }
-    };
 
-    fetchCourse();
-  }, [slug]);
+      if (!matchedCourse) {
+        const { data: allCourses } = await getCourses();
+        matchedCourse = allCourses?.find((c) => c.slug === slug);
+      }
+
+      if (!matchedCourse) {
+        setCourse(null);
+        setLoading(false);
+        return;
+      }
+
+      const { data: fullCourse } = await getCourseById(matchedCourse.id);
+      setCourse(fullCourse || matchedCourse);
+    } catch (err) {
+      console.error("Error loading course:", err);
+      setCourse(null);
+    } finally {
+      // 🕒 Ensure loading lasts at least 1 second
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(1000 - elapsed, 0);
+      setTimeout(() => setLoading(false), remaining);
+    }
+  };
+
+  fetchCourse();
+}, [slug]);
+
 
   if (loading) {
     return (
       <div className="w-full min-h-screen bg-gray-100 animate-pulse">
-        <div className="max-w-5xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-10">
-          <div className="bg-gray-300 rounded-lg h-[260px] w-full md:w-1/2" />
-          <div className="flex flex-col justify-center w-full md:w-1/2 space-y-4">
-            <div className="bg-gray-300 h-5 w-1/4 rounded" />
-            <div className="bg-gray-300 h-8 w-2/3 rounded" />
-            <div className="bg-gray-300 h-4 w-3/4 rounded" />
-            <div className="bg-gray-300 h-10 w-1/3 rounded mt-6" />
+        {/* Course Banner */}
+        <div className="w-full py-8 md:py-16 bg-gray-200">
+          <div className="max-w-5xl mx-auto px-4 md:px-6 flex flex-col-reverse md:flex-row items-center gap-8 md:gap-12">
+            {/* Left: Course Info */}
+            <div className="w-full md:w-2/3 flex flex-col gap-4">
+              <div className="bg-gray-300 h-6 w-1/4 rounded" /> {/* Price */}
+              <div className="bg-gray-300 h-10 md:h-12 w-2/3 rounded" /> {/* Title */}
+              <div className="bg-gray-300 h-5 w-1/2 rounded" /> {/* Lessons */}
+              <div className="bg-gray-300 h-20 w-full rounded mt-4" /> {/* Description */}
+              <div className="bg-gray-300 h-12 w-32 rounded mt-6" /> {/* Button */}
+            </div>
+
+            {/* Right: Image */}
+            <div className="w-full md:w-2/3 h-60 md:h-72 bg-gray-300 rounded-lg shadow-md" />
+          </div>
+        </div>
+
+        {/* Course Sections */}
+        <div className="w-full py-12 md:py-16 bg-white">
+          <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-12">
+            {[...Array(3)].map((_, sectionIdx) => (
+              <div key={sectionIdx} className="space-y-4">
+                <div className="bg-gray-300 h-8 md:h-10 w-1/3 rounded" /> {/* Section title */}
+                <div className="bg-gray-300 h-4 w-2/3 rounded" /> {/* Section description */}
+
+                <ul className="space-y-3">
+                  {[...Array(4)].map((_, lessonIdx) => (
+                    <li
+                      key={lessonIdx}
+                      className="flex items-center gap-4 w-full"
+                    >
+                      <div className="bg-gray-300 w-6 h-6 rounded" /> {/* Icon */}
+                      <div className="bg-gray-300 h-4 w-1/3 rounded" /> {/* Lesson title */}
+                      <div className="bg-gray-300 h-4 w-16 rounded ml-auto" /> {/* Duration/size */}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
+
   if (!course) {
     notFound();
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+    <div
       className="w-full min-h-screen"
     >
       <ScrollNavbar course={course} />
@@ -198,6 +234,6 @@ export default function CoursePage() {
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

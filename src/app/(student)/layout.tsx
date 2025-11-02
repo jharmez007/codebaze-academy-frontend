@@ -2,7 +2,6 @@
 "use client";
 
 import { FullscreenProvider } from "@/context/FullscreenContext";
-import { AuthProvider } from "@/context/AuthContext";
 import { Navbar, Footer, Chatbot } from "@/components";
 
 export default function StudentLayout({

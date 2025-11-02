@@ -80,9 +80,9 @@ export async function createCourse<T = unknown>(
     const error = err as any;
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -101,9 +101,9 @@ export async function updateCourse<T = unknown>(
     const error = err as any;
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -122,9 +122,9 @@ export async function getCourseById(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -155,9 +155,9 @@ export async function getCourses(): Promise<{
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -172,9 +172,9 @@ export async function deleteCourse(id: number): Promise<{
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -191,9 +191,9 @@ export async function publishCourse(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -211,9 +211,9 @@ export async function deleteSection(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -235,9 +235,9 @@ export async function deleteLesson(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -261,9 +261,9 @@ export async function getCourseLessonById(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -282,9 +282,9 @@ export async function getLessonById(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -313,9 +313,9 @@ export async function updateLesson(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -344,9 +344,9 @@ export async function addQuiz(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -371,9 +371,9 @@ export async function updateQuiz(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }
@@ -393,9 +393,9 @@ export async function deleteQuiz(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
     };
   }
 }

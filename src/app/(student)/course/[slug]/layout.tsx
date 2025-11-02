@@ -1,4 +1,6 @@
 import { courses } from "../../../../data/courses";
+import  ProtectedRoute  from "@/components/ProtectedRoute";
+
 // Metadata
 export async function generateMetadata(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
@@ -19,5 +21,5 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
 }
 
 export default function CourseLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <><ProtectedRoute>{children}</ProtectedRoute></>;
 }
