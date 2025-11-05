@@ -29,7 +29,7 @@ const BillingSection: React.FC<BillingSectionProps> = ({
 
   // keyboard handler to open row with Enter or Space
   const handleRowKey = (e: React.KeyboardEvent, key: string) => {
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleRowOpen(key);
     }
@@ -42,7 +42,7 @@ const BillingSection: React.FC<BillingSectionProps> = ({
   };
   const handleCommunityKey = (e: React.KeyboardEvent) => {
     if (activeEdit) return;
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key === "Enter") {
       e.preventDefault();
       router.push("/not-found");
     }
@@ -82,8 +82,8 @@ const BillingSection: React.FC<BillingSectionProps> = ({
             className={rowClass}
             role="button"
             tabIndex={activeEdit ? -1 : 0}
-            onClick={() => handleRowOpen("payment-method")}
-            onKeyDown={(e) => handleRowKey(e, "payment-method")}
+            // onClick={() => handleRowOpen("payment-method")}
+            // onKeyDown={(e) => handleRowKey(e, "payment-method")}
             aria-disabled={!!activeEdit}
           >
             <div className="flex flex-wrap">

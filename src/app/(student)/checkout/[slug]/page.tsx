@@ -8,6 +8,7 @@ import { successToast, errorToast, infoToast } from "@/lib/toast";
 import { getCourses, getCourseById, Course } from "@/services/studentCourseService";
 import { enroll, enrollRequest } from "@/services/enrollmentService";
 import { login as loginService, verifyToken, forgotPassword } from "@/services/authService";
+import { initializePayment } from "@/services/paymentService";
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
 import { useAuth } from "@/context/AuthContext";
 import { useCurrency } from "@/hooks/useCurency";
@@ -247,31 +248,49 @@ const handleEnroll = async () => {
     return;
   }
 
-  const payload: any = { email };
+  const payload = {
+    email: user?.email,
+    amount: course.price, 
+    redirect_url: `${window.location.origin}/products`, 
+  };
 
   try {
-    const result = await enroll(course.id, payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    if (course.price > 0) {
+      // Paid course → initialize payment
+      const paymentResult = await initializePayment(course.id.toString(), payload, {
+        headers: { Authorization: `Bearer ${token!}` },
+      });
 
-    if (result.status === 200 || result.status === 201) {
-      successToast(`Enrolled in ${course.title}!`);
-
-      // ✅ Route based on full_name
-      if (result.full_name === "Guest User") {
-        // New user → create account
-        router.push(`/create-account/${course.slug}`);
+      if (paymentResult.status === 200 && paymentResult.authorization_url) {
+        // Redirect user to payment page
+        router.push(paymentResult.authorization_url);
       } else {
-        // Existing user → products page
-        router.push("/products");
+        errorToast(`Payment initialization failed: ${paymentResult.message || "Unknown error"}`);
       }
     } else {
-      errorToast(`Enrollment failed: ${result.message || "Unknown error"}`);
+      // Free course → enroll directly
+      const result = await enroll(course.id, payload, {
+        headers: { Authorization: `Bearer ${token!}` },
+      });
+
+      if (result.status === 200 || result.status === 201) {
+        successToast(`Enrolled in ${course.title}!`);
+
+        if (result.full_name === "Guest User" && result.has_password === false) {
+          router.push(`/create-account/${course.slug}`);
+        } else {
+          router.push("/products");
+        }
+      } else {
+        errorToast(`Enrollment failed: ${result.message || "Unknown error"}`);
+      }
     }
   } catch (error) {
     errorToast(`Something went wrong: ${(error as Error).message}`);
   }
 };
+
+
 
 const handleResetPassword = async () => {
   if (!email) {
@@ -298,6 +317,8 @@ const handleResetPassword = async () => {
 
 const handleLogout = () => {
     logout();
+    setShowPassword(false);
+    setPassword("");
     setEmail("");
   };
 

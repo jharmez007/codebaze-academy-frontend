@@ -1,195 +1,151 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner';
+import { toast } from 'sonner'
+import { Monitor, Smartphone, X } from 'lucide-react'
 
 interface EditSessionsProps {
-  activeEdit: string | null;
-  onEdit: (key: string | null) => void;
+  activeEdit: string | null
+  onEdit: (key: string | null) => void
+}
+
+interface Session {
+  id: number
+  device: string
+  date: string
 }
 
 const EditSessions: React.FC<EditSessionsProps> = ({
   activeEdit,
   onEdit,
 }) => {
-  // saved values shown when not editing
-  const [savedFirst, setSavedFirst] = useState("");
-  const [savedLast, setSavedLast] = useState("");
+  // saved sessions (displayed when not editing)
+  const [sessions, setSessions] = useState<Session[]>([
+    { id: 1, device: "Chrome on Windows 10", date: "Nov 2 at 3:23 PM EST" },
+    { id: 2, device: "Chrome on Android", date: "Nov 2 at 3:23 PM EST" },
+  ])
 
-  // form inputs
-  const [firstName, setFirstName] = useState(savedFirst);
-  const [lastName, setLastName] = useState(savedLast);
-
-  // ref for the edit form container to detect outside clicks
-  const formRef = useRef<HTMLDivElement | null>(null);
-
-  // when edit opens, populate inputs with saved values
-  useEffect(() => {
-    if (activeEdit === "sessions") {
-      setFirstName(savedFirst);
-      setLastName(savedLast);
-    }
-  }, [activeEdit, savedFirst, savedLast]);
+  const formRef = useRef<HTMLDivElement | null>(null)
 
   // close edit when clicking outside the form
   useEffect(() => {
-    if (activeEdit !== "sessions") return;
+    if (activeEdit !== "sessions") return
 
     const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null;
-      if (!formRef.current) return;
+      const target = e.target as Node | null
+      if (!formRef.current) return
       if (target && !formRef.current.contains(target)) {
-        onEdit && onEdit(null);
+        onEdit && onEdit(null)
       }
-    };
+    }
 
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [activeEdit, onEdit]);
-
-  const isFormValid = firstName.trim() !== "" && lastName.trim() !== "";
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => document.removeEventListener("pointerdown", onPointerDown)
+  }, [activeEdit, onEdit])
 
   const openEdit = () => {
-    if (!activeEdit) onEdit && onEdit("sessions");
-  };
+    if (!activeEdit) onEdit && onEdit("sessions")
+  }
 
-  const handleDiscard = (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    // reset inputs and close
-    setFirstName(savedFirst);
-    setLastName(savedLast);
-    onEdit && onEdit(null);
-  };
+  const handleRemove = (id: number) => {
+    setSessions((prev) => prev.filter((s) => s.id !== id))
+    toast.success("Session removed")
+  }
 
-  const handleSave = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!isFormValid) return;
-    setSavedFirst(firstName.trim());
-    setSavedLast(lastName.trim());
-    onEdit && onEdit(null);
-    toast.success("Name updated");
-  };
+  // helper: pick correct icon for device
+  const getDeviceIcon = (device: string) => {
+    if (/android|iphone|mobile/i.test(device)) return <Smartphone className="w-5 h-5 text-gray-600" />
+    return <Monitor className="w-5 h-5 text-gray-600" />
+  }
 
   return (
-   <div>
-    {/* Display block - hidden when editing */}
-    {activeEdit !== "sessions" && (
-      <div className='text-sm max-sm:px-6'>
-        <div className="block md:hidden font-semibold">Sessions</div>
-        <div className="flex justify-between items-center">
-          <div className='truncate mr-3'>
-            <span className='text-gray-400'>
-              {(!savedFirst && !savedLast) ? 'No active sessions' : ''}
-            </span>
-            <div className='truncate text-wrap'>{savedFirst} {savedLast}</div>
-          </div>
+    <div>
+      {/* Display block - hidden when editing */}
+      {activeEdit !== "sessions" && (
+        <div className='text-sm max-sm:px-6'>
+          <div className="block md:hidden font-semibold">Sessions</div>
+          <div className="flex justify-between items-center">
+            <div className='truncate mr-3'>
+              <span className={sessions.length === 0 ? 'text-gray-400' : 'text-black'}>
+                {sessions.length === 0
+                  ? 'No active sessions'
+                  : `${sessions.length} active session${sessions.length > 1 ? 's' : ''}`}
+              </span>
+            </div>
 
-          {/* Edit control - faded and non-interactive when any edit is active */}
-          <div
-            onClick={openEdit}
-            className={
-              `cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4
-               ${activeEdit ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-300'}`
-            }
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit(); }}
-            aria-disabled={!!activeEdit}
-          >
-            <span className={activeEdit ? 'text-gray-500' : ''}>Edit</span>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Edit Form - shown when editing */}
-    {activeEdit === "sessions" && (
-      <>
-        {/* overlay disables all interaction/hover outside the form */}
-        <div
-          className="fixed inset-0 bg-transparent z-40"
-          onMouseDown={() => onEdit && onEdit(null)}
-          aria-hidden
-        />
-
-        <div
-          ref={formRef}
-          className='edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm'
-        >
-          {/* card header */}
-          <div className='flex justify-between items-center px-6 pt-5'>
-            <div>
-              <div className="font-semibold ">Name</div>
+            <div
+              onClick={openEdit}
+              className={
+                `cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4
+                 ${activeEdit ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-300'}`
+              }
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit(); }}
+              aria-disabled={!!activeEdit}
+            >
+              <span className={activeEdit ? 'text-gray-500' : ''}>Edit</span>
             </div>
           </div>
-
-          {/* card body */}
-          <div className='px-6 py-5'>
-            <form onSubmit={handleSave}>
-              <div className='flex flex-wrap'>
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='firstname'
-                    >
-                        First name
-                    </label>
-                    <input 
-                      id='firstname'
-                      type="text"
-                      placeholder="e.g. Agu"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='lastname'
-                    >
-                        Last name
-                    </label>
-                    <input 
-                      id='lastname'
-                      type="text"
-                      placeholder="e.g. James"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className='flex justify-end flex-wrap gap-2'>
-                <button
-                  onClick={handleDiscard}
-                  className='cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in'
-                  type="button"
-                >
-                  Discard
-                </button>
-                <button
-                  className={`cursor-pointer text-white rounded-md py-1 px-3 text-sm 
-                    ${isFormValid ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border border-gray-300 pointer-events-none'}`}
-                  type="submit"
-                  disabled={!isFormValid}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
-      </>
-    )}
-   </div>
+      )}
+
+      {/* Edit Form - shown when editing */}
+      {activeEdit === "sessions" && (
+        <>
+          <div
+            className="fixed inset-0 bg-transparent z-40"
+            onMouseDown={() => onEdit && onEdit(null)}
+            aria-hidden
+          />
+
+          <div
+            ref={formRef}
+            className='edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm p-6'
+          >
+            <div className="font-semibold mb-3">Manage verified sessions</div>
+            <p className="text-gray-500 text-[13px] mb-5 leading-5">
+              Each time you login to your account, a verification code is emailed to you to proceed.
+              You may have up to 5 login sessions verified at any given time, each of which expire after 30 days.
+              Logging into a 6th session will logout the oldest session.
+            </p>
+
+            <div className="border rounded-md">
+              {sessions.length === 0 ? (
+                <div className="p-4 text-gray-400 text-sm">No active sessions</div>
+              ) : (
+                sessions.map((session) => (
+                  <div key={session.id} className="flex justify-between items-center px-4 py-3 border-b last:border-b-0">
+                    <div className="flex items-center gap-3">
+                      {getDeviceIcon(session.device)}
+                      <div>
+                        <div className="font-medium">{session.device}</div>
+                        <div className="text-xs text-gray-500">{session.date}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemove(session.id)}
+                      className="text-gray-600 hover:text-red-500 text-lg  font-semibold"
+                      aria-label="Remove session"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex justify-end mt-5">
+              <button
+                onClick={() => onEdit && onEdit(null)}
+                className='cursor-pointer bg-gray-900 text-white rounded-md py-1 px-4 text-sm hover:bg-black transition ease-in'
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
-export default EditSessions;
+export default EditSessions

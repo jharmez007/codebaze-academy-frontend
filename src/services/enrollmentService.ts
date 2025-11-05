@@ -5,15 +5,15 @@ export async function enroll(
   courseId: number,
   payload: any,
   config?: { headers: Record<string, string> }
-): Promise<{ status?: number; message?: string; full_name?: string; }> {
+): Promise<{ status?: number; message?: string; full_name?: string; has_password?: boolean; }> {
   try {
     const response = await Api.post(`/enrollments/${courseId}`, payload, config);
-    return { status: response.status, message: response.data.message, full_name: response.data.full_name };
+    return { status: response.status, message: response.data.message, full_name: response.data.full_name, has_password: response.data.has_password };
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.error ||
-        error.error,
+        error?.response?.data?.message ||
+        error.message,
     };
   }
 }
@@ -35,9 +35,9 @@ export async function enrollRequest(
   } catch (error: any) {
     return {
       message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error.message,
     };
   }
 }

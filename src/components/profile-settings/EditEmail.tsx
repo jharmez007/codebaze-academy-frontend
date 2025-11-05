@@ -1,195 +1,152 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner';
+"use client";
+
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface EditEmailProps {
   activeEdit: string | null;
   onEdit: (key: string | null) => void;
 }
 
-const EditEmail: React.FC<EditEmailProps> = ({
-  activeEdit,
-  onEdit,
-}) => {
-  // saved values shown when not editing
-  const [savedFirst, setSavedFirst] = useState("");
-  const [savedLast, setSavedLast] = useState("");
-
-  // form inputs
-  const [firstName, setFirstName] = useState(savedFirst);
-  const [lastName, setLastName] = useState(savedLast);
-
-  // ref for the edit form container to detect outside clicks
+const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
+  const [savedEmail, setSavedEmail] = useState("");
+  const [email, setEmail] = useState(savedEmail);
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  // when edit opens, populate inputs with saved values
+  // When edit mode activates, preload saved email
   useEffect(() => {
-    if (activeEdit === "email") {
-      setFirstName(savedFirst);
-      setLastName(savedLast);
-    }
-  }, [activeEdit, savedFirst, savedLast]);
+    if (activeEdit === "email") setEmail(savedEmail);
+  }, [activeEdit, savedEmail]);
 
-  // close edit when clicking outside the form
+  // Close form on outside click
   useEffect(() => {
     if (activeEdit !== "email") return;
-
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null;
-      if (!formRef.current) return;
-      if (target && !formRef.current.contains(target)) {
-        onEdit && onEdit(null);
+    const handleOutside = (e: PointerEvent) => {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        onEdit(null);
       }
     };
-
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener("pointerdown", handleOutside);
+    return () => document.removeEventListener("pointerdown", handleOutside);
   }, [activeEdit, onEdit]);
 
-  const isFormValid = firstName.trim() !== "" && lastName.trim() !== "";
+  const isValid = email.trim() !== "" && /\S+@\S+\.\S+/.test(email);
 
   const openEdit = () => {
-    if (!activeEdit) onEdit && onEdit("email");
+    if (!activeEdit) onEdit("email");
   };
 
-  const handleDiscard = (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    // reset inputs and close
-    setFirstName(savedFirst);
-    setLastName(savedLast);
-    onEdit && onEdit(null);
+  const handleDiscard = () => {
+    setEmail(savedEmail);
+    onEdit(null);
   };
 
-  const handleSave = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!isFormValid) return;
-    setSavedFirst(firstName.trim());
-    setSavedLast(lastName.trim());
-    onEdit && onEdit(null);
-    toast.success("Name updated");
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) return;
+    setSavedEmail(email.trim());
+    toast.success("Email updated");
+    onEdit(null);
   };
 
   return (
-   <div>
-    {/* Display block - hidden when editing */}
-    {activeEdit !== "email" && (
-      <div className='text-sm max-sm:px-6'>
-        <div className="block md:hidden font-semibold">Email</div>
-        <div className="flex justify-between items-center">
-          <div className='truncate mr-3'>
-            <span className='text-gray-400'>
-              {(!savedFirst && !savedLast) ? 'Change your email' : ''}
-            </span>
-            <div className='truncate text-wrap'>{savedFirst} {savedLast}</div>
-          </div>
-
-          {/* Edit control - faded and non-interactive when any edit is active */}
-          <div
-            onClick={openEdit}
-            className={
-              `cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4
-               ${activeEdit ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-300'}`
-            }
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit(); }}
-            aria-disabled={!!activeEdit}
-          >
-            <span className={activeEdit ? 'text-gray-500' : ''}>Edit</span>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Edit Form - shown when editing */}
-    {activeEdit === "email" && (
-      <>
-        {/* overlay disables all interaction/hover outside the form */}
-        <div
-          className="fixed inset-0 bg-transparent z-40"
-          onMouseDown={() => onEdit && onEdit(null)}
-          aria-hidden
-        />
-
-        <div
-          ref={formRef}
-          className='edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm'
-        >
-          {/* card header */}
-          <div className='flex justify-between items-center px-6 pt-5'>
-            <div>
-              <div className="font-semibold ">Name</div>
+    <div>
+      {/* Display state */}
+      {activeEdit !== "email" && (
+        <div className="text-sm max-sm:px-6">
+          <div className="block md:hidden font-semibold">Email</div>
+          <div className="flex justify-between items-center">
+            <div className="truncate mr-3">
+              <span className="text-gray-400">
+                {!savedEmail ? "Change your email" : " "}
+              </span>
+              <div className='truncate text-wrap'>{savedEmail}</div>
+            </div>
+            <div
+              onClick={openEdit}
+              role="button"
+              tabIndex={0}
+              className={`cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4 ${
+                activeEdit
+                  ? "opacity-40 pointer-events-none"
+                  : "hover:bg-gray-300"
+              }`}
+              onKeyDown={(e) => {
+                if (!activeEdit && (e.key === "Enter")) openEdit();
+              }}
+            >
+              <span>Edit</span>
             </div>
           </div>
-
-          {/* card body */}
-          <div className='px-6 py-5'>
-            <form onSubmit={handleSave}>
-              <div className='flex flex-wrap'>
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='firstname'
-                    >
-                        First name
-                    </label>
-                    <input 
-                      id='firstname'
-                      type="text"
-                      placeholder="e.g. Agu"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='lastname'
-                    >
-                        Last name
-                    </label>
-                    <input 
-                      id='lastname'
-                      type="text"
-                      placeholder="e.g. James"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className='flex justify-end flex-wrap gap-2'>
-                <button
-                  onClick={handleDiscard}
-                  className='cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in'
-                  type="button"
-                >
-                  Discard
-                </button>
-                <button
-                  className={`cursor-pointer text-white rounded-md py-1 px-3 text-sm 
-                    ${isFormValid ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border border-gray-300 pointer-events-none'}`}
-                  type="submit"
-                  disabled={!isFormValid}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
-      </>
-    )}
-   </div>
-  )
-}
+      )}
+
+      {/* Edit Form */}
+      {activeEdit === "email" && (
+        <>
+          <div
+            className="fixed inset-0 bg-transparent z-40"
+            onMouseDown={() => onEdit(null)}
+            aria-hidden
+          />
+          <div
+            ref={formRef}
+            className="edit-form z-50 relative flex flex-col bg-white border border-gray-300 rounded-md text-sm"
+          >
+            {/* Header */}
+            <div className="px-6 pt-5">
+              <div className="font-semibold text-base">Email</div>
+              <p className="text-gray-500 mt-1 text-[13px]">
+                Your email is only shared with the creator for sending important
+                emails and notifications. You can change your email notification
+                settings separately.
+              </p>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5">
+              <form onSubmit={handleSave}>
+                <label htmlFor="email" className="sr-only">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="e.g. picard@starfleet.org"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+
+                {/* Footer buttons */}
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={handleDiscard}
+                    className="cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1.5 px-4 text-sm hover:bg-gray-100 transition ease-in"
+                  >
+                    Discard
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!isValid}
+                    className={`cursor-pointer text-white rounded-md py-1.5 px-4 text-sm ${
+                      isValid
+                        ? "bg-[#06040E] border border-[#06040E]"
+                        : "bg-gray-300 border border-gray-300 pointer-events-none"
+                    }`}
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default EditEmail;

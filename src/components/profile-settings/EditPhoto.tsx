@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react';
+import { UserRound, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EditPhotoProps {
@@ -10,24 +11,26 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
   activeEdit,
   onEdit,
 }) => {
-  // saved values shown when not editing
-  const [savedFirst, setSavedFirst] = useState("");
-  const [savedLast, setSavedLast] = useState("");
+  // saved photo (shown when not editing)
+  const [savedPhoto, setSavedPhoto] = useState<string | null>(null);
 
-  // form inputs
-  const [firstName, setFirstName] = useState(savedFirst);
-  const [lastName, setLastName] = useState(savedLast);
+  // file input
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // modal state for full-size preview
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   // ref for the edit form container to detect outside clicks
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  // when edit opens, populate inputs with saved values
+  // when edit opens, reset preview
   useEffect(() => {
     if (activeEdit === "photo") {
-      setFirstName(savedFirst);
-      setLastName(savedLast);
+      setPreviewUrl(savedPhoto);
+      setSelectedPhoto(null);
     }
-  }, [activeEdit, savedFirst, savedLast]);
+  }, [activeEdit, savedPhoto]);
 
   // close edit when clicking outside the form
   useEffect(() => {
@@ -45,28 +48,53 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [activeEdit, onEdit]);
 
-  const isFormValid = firstName.trim() !== "" && lastName.trim() !== "";
-
   const openEdit = () => {
     if (!activeEdit) onEdit && onEdit("photo");
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File must be under 5MB");
+      return;
+    }
+    setSelectedPhoto(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
   const handleDiscard = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    // reset inputs and close
-    setFirstName(savedFirst);
-    setLastName(savedLast);
+    setSelectedPhoto(null);
+    setPreviewUrl(savedPhoto);
     onEdit && onEdit(null);
+    setShowPreviewModal(false);
   };
 
   const handleSave = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!isFormValid) return;
-    setSavedFirst(firstName.trim());
-    setSavedLast(lastName.trim());
+    if (!selectedPhoto) return;
+    setSavedPhoto(previewUrl);
     onEdit && onEdit(null);
-    toast.success("Name updated");
+    toast.success("Photo updated");
+    setShowPreviewModal(false);
   };
+
+  // open modal when user clicks the preview image
+  const handlePreviewClick = () => {
+    if (!previewUrl) return;
+    setShowPreviewModal(true);
+  };
+
+  // close modal on escape or outside click
+  useEffect(() => {
+    if (!showPreviewModal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowPreviewModal(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showPreviewModal]);
 
   return (
    <div>
@@ -76,17 +104,20 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
         <div className="block md:hidden font-semibold">Photo</div>
         <div className="flex justify-between items-center">
           <div className='truncate mr-3 flex items-center'>
-            {(!savedFirst && !savedLast) ? (
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#E5C9A8] text-sm font-bold text-gray-800 cursor-pointer hover:scale-105 transition-transform">
-                {(savedFirst?.[0] || savedLast?.[0] || '?').toUpperCase()}
-              </div>
+            {savedPhoto ? (
+              <img
+                src={savedPhoto}
+                alt="Profile"
+                className="w-9 h-9 rounded-full object-cover border border-gray-200"
+              />
             ) : (
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 text-sm font-bold text-gray-800">
-                {(savedFirst ? savedFirst[0] : savedLast ? savedLast[0] : '?').toUpperCase()}
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-[#E5C9A8] text-sm font-bold text-gray-800">
+                <UserRound className='w-4 h-4' />
               </div>
             )}
           </div>
-          {/* Edit control - faded and non-interactive when any edit is active */}
+
+          {/* Edit control */}
           <div
             onClick={openEdit}
             className={
@@ -107,7 +138,6 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
     {/* Edit Form - shown when editing */}
     {activeEdit === "photo" && (
       <>
-        {/* overlay disables all interaction/hover outside the form */}
         <div
           className="fixed inset-0 bg-transparent z-40"
           onMouseDown={() => onEdit && onEdit(null)}
@@ -121,56 +151,78 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
           {/* card header */}
           <div className='flex justify-between items-center px-6 pt-5'>
             <div>
-              <div className="font-semibold ">Name</div>
+              <div className="font-semibold">Photo</div>
+              <p className="text-[13px] text-gray-500 mt-1">
+                Your photo is used in messaging, commenting, and community posts.
+              </p>
             </div>
           </div>
 
           {/* card body */}
           <div className='px-6 py-5'>
             <form onSubmit={handleSave}>
-              <div className='flex flex-wrap'>
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='firstname'
-                    >
-                        First name
-                    </label>
-                    <input 
-                      id='firstname'
-                      type="text"
-                      placeholder="e.g. Agu"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
+              <div className="mb-3">
+                <label
+                  htmlFor="photoUpload"
+                  className="flex items-center justify-between border border-gray-300 rounded-md px-3 py-2 cursor-pointer hover:bg-gray-100 transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm text-gray-700">
+                      {selectedPhoto ? selectedPhoto.name : "Choose image"}
+                    </span>
                   </div>
-                </div>
-                
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='lastname'
-                    >
-                        Last name
-                    </label>
-                    <input 
-                      id='lastname'
-                      type="text"
-                      placeholder="e.g. James"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
+                </label>
+                <input
+                  id="photoUpload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  PNG, JPEG, GIF, or WEBP up to 5 MB.
+                </p>
               </div>
 
-              <div className='flex justify-end flex-wrap gap-2'>
+              {previewUrl && (
+                <div className="mt-3">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-20 h-20 rounded-full object-cover cursor-pointer border border-gray-200"
+                    onClick={handlePreviewClick}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter") handlePreviewClick(); }}
+                  />
+                </div>
+              )}
+
+              {/* Full-size preview modal */}
+              {showPreviewModal && previewUrl && (
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70">
+                  <div
+                    className="relative max-w-4xl w-full mx-4"
+                    role="dialog"
+                    aria-modal="true"
+                  >
+                    <button
+                      onClick={() => setShowPreviewModal(false)}
+                      className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 cursor-pointer hover:bg-white text-sm"
+                      aria-label="Close preview"
+                    >
+                      Cancel
+                    </button>
+
+                    <div className="bg-white rounded-md overflow-hidden">
+                      <img src={previewUrl} alt="Full preview" className="w-full h-auto max-h-[80vh] object-contain bg-black"/>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className='flex justify-end flex-wrap gap-2 mt-5'>
                 <button
                   onClick={handleDiscard}
                   className='cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in'
@@ -180,9 +232,9 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
                 </button>
                 <button
                   className={`cursor-pointer text-white rounded-md py-1 px-3 text-sm 
-                    ${isFormValid ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border border-gray-300 pointer-events-none'}`}
+                    ${selectedPhoto ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border border-gray-300 pointer-events-none'}`}
                   type="submit"
-                  disabled={!isFormValid}
+                  disabled={!selectedPhoto}
                 >
                   Save
                 </button>

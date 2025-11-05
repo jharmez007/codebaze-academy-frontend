@@ -27,7 +27,7 @@ const AccountSection: React.FC<AccountSectionProps> = ({
   };
 
   const handleRowKey = (e: React.KeyboardEvent, key: string) => {
-    if (e.key === "Enter" || e.key === " ") {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleRowOpen(key);
     }

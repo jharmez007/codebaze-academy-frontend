@@ -15,14 +15,18 @@ export default function CreateAccountPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-    const { token } = useAuth();
+  const { token } = useAuth();
 
   const router = useRouter();
   const params = useParams(); // get slug from URL
   const slug = params.slug;
 
+  // disallow "Guest User" (case-insensitive)
+  const trimmedName = name.trim();
+  const isGuestUser = trimmedName.toLowerCase() === "guest user";
+
   // Validation
-  const canSubmit = password.length > 6 && name.trim().length > 0;
+  const canSubmit = password.length > 6 && trimmedName.length > 0 && !isGuestUser;
 
   // Fetch course matching slug
   useEffect(() => {
@@ -42,6 +46,11 @@ export default function CreateAccountPage() {
     e.preventDefault();
     if (!canSubmit || !course) return;
 
+    if (isGuestUser) {
+      setError('The name "Guest User" is not allowed. Please choose another name.');
+      return;
+    }
+
     if (!token) {
       infoToast("You must verify your email first.");
       return;
@@ -53,7 +62,7 @@ export default function CreateAccountPage() {
     try {
       // Pass token in headers
       const res = await createPassword(
-        { password, full_name:name }, // include name if needed
+        { password, full_name: name }, // include name if needed
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -112,6 +121,9 @@ export default function CreateAccountPage() {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
               />
+              {isGuestUser && (
+                <p className="text-red-500 text-sm mt-1">The name "Guest User" is not allowed. Please choose another name.</p>
+              )}
             </div>
 
             {/* Password */}

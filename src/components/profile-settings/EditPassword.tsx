@@ -1,42 +1,33 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner';
+import React, { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 interface EditPasswordProps {
   activeEdit: string | null;
   onEdit: (key: string | null) => void;
 }
 
-const EditPassword: React.FC<EditPasswordProps> = ({
-  activeEdit,
-  onEdit,
-}) => {
-  // saved values shown when not editing
-  const [savedFirst, setSavedFirst] = useState("");
-  const [savedLast, setSavedLast] = useState("");
-
-  // form inputs
-  const [firstName, setFirstName] = useState(savedFirst);
-  const [lastName, setLastName] = useState(savedLast);
-
-  // ref for the edit form container to detect outside clicks
+const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  // when edit opens, populate inputs with saved values
+  // When edit opens, reset fields
   useEffect(() => {
     if (activeEdit === "password") {
-      setFirstName(savedFirst);
-      setLastName(savedLast);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     }
-  }, [activeEdit, savedFirst, savedLast]);
+  }, [activeEdit]);
 
-  // close edit when clicking outside the form
+  // Close edit when clicking outside form
   useEffect(() => {
     if (activeEdit !== "password") return;
 
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as Node | null;
-      if (!formRef.current) return;
-      if (target && !formRef.current.contains(target)) {
+      if (formRef.current && target && !formRef.current.contains(target)) {
         onEdit && onEdit(null);
       }
     };
@@ -45,151 +36,171 @@ const EditPassword: React.FC<EditPasswordProps> = ({
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [activeEdit, onEdit]);
 
-  const isFormValid = firstName.trim() !== "" && lastName.trim() !== "";
-
   const openEdit = () => {
     if (!activeEdit) onEdit && onEdit("password");
   };
 
   const handleDiscard = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    // reset inputs and close
-    setFirstName(savedFirst);
-    setLastName(savedLast);
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
     onEdit && onEdit(null);
   };
+
+  const isFormValid =
+    currentPassword.trim().length > 0 &&
+    newPassword.trim().length >= 6 &&
+    /\d/.test(newPassword) &&
+    /[!@#$%^&*(),.?":{}|<>]/.test(newPassword) &&
+    confirmPassword === newPassword;
 
   const handleSave = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!isFormValid) return;
-    setSavedFirst(firstName.trim());
-    setSavedLast(lastName.trim());
+    toast.success("Password updated");
     onEdit && onEdit(null);
-    toast.success("Name updated");
   };
 
   return (
-   <div>
-    {/* Display block - hidden when editing */}
-    {activeEdit !== "password" && (
-      <div className='text-sm max-sm:px-6'>
-        <div className="block md:hidden font-semibold">Password</div>
-        <div className="flex justify-between items-center">
-          <div className='truncate mr-3'>
-            <span className='text-gray-400'>
-              {(!savedFirst && !savedLast) ? 'Change your password' : ''}
-            </span>
-            <div className='truncate text-wrap'>{savedFirst} {savedLast}</div>
-          </div>
-
-          {/* Edit control - faded and non-interactive when any edit is active */}
-          <div
-            onClick={openEdit}
-            className={
-              `cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4
-               ${activeEdit ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-300'}`
-            }
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit(); }}
-            aria-disabled={!!activeEdit}
-          >
-            <span className={activeEdit ? 'text-gray-500' : ''}>Edit</span>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Edit Form - shown when editing */}
-    {activeEdit === "password" && (
-      <>
-        {/* overlay disables all interaction/hover outside the form */}
-        <div
-          className="fixed inset-0 bg-transparent z-40"
-          onMouseDown={() => onEdit && onEdit(null)}
-          aria-hidden
-        />
-
-        <div
-          ref={formRef}
-          className='edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm'
-        >
-          {/* card header */}
-          <div className='flex justify-between items-center px-6 pt-5'>
-            <div>
-              <div className="font-semibold ">Name</div>
+    <div>
+      {/* Display block - hidden when editing */}
+      {activeEdit !== "password" && (
+        <div className="text-sm max-sm:px-6">
+          <div className="block md:hidden font-semibold">Password</div>
+          <div className="flex justify-between items-center">
+            <div className="truncate mr-3">
+              <span className="text-gray-400">
+                 {!currentPassword ? "Change your password" : " "}
+              </span>
+              <div className='truncate text-wrap text-black text-xl'>{currentPassword ? "••••••••" : ""}</div>
+            </div>
+            <div
+              onClick={openEdit}
+              className={`cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4 ${
+                activeEdit
+                  ? "opacity-40 pointer-events-none"
+                  : "hover:bg-gray-300"
+              }`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (!activeEdit && (e.key === "Enter"))
+                  openEdit();
+              }}
+              aria-disabled={!!activeEdit}
+            >
+              <span>Edit</span>
             </div>
           </div>
-
-          {/* card body */}
-          <div className='px-6 py-5'>
-            <form onSubmit={handleSave}>
-              <div className='flex flex-wrap'>
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='firstname'
-                    >
-                        First name
-                    </label>
-                    <input 
-                      id='firstname'
-                      type="text"
-                      placeholder="e.g. Agu"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='lastname'
-                    >
-                        Last name
-                    </label>
-                    <input 
-                      id='lastname'
-                      type="text"
-                      placeholder="e.g. James"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className='flex justify-end flex-wrap gap-2'>
-                <button
-                  onClick={handleDiscard}
-                  className='cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in'
-                  type="button"
-                >
-                  Discard
-                </button>
-                <button
-                  className={`cursor-pointer text-white rounded-md py-1 px-3 text-sm 
-                    ${isFormValid ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border border-gray-300 pointer-events-none'}`}
-                  type="submit"
-                  disabled={!isFormValid}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
-      </>
-    )}
-   </div>
-  )
-}
+      )}
+
+      {/* Edit Form - shown when editing */}
+      {activeEdit === "password" && (
+        <>
+          <div
+            className="fixed inset-0 bg-transparent z-40"
+            onMouseDown={() => onEdit && onEdit(null)}
+            aria-hidden
+          />
+          <div
+            ref={formRef}
+            className="edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm"
+          >
+            {/* Header */}
+            <div className="px-6 pt-5">
+              <div className="font-semibold text-base">Password</div>
+              <p className="text-gray-500 mt-1 text-[13px]">
+                Your new password should be at least 6 characters, including at
+                least one number and special character.
+              </p>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5">
+              <form onSubmit={handleSave}>
+                <div className="mb-3">
+                  <label
+                    htmlFor="currentPassword"
+                    className="block mb-1 font-medium"
+                  >
+                    Current password
+                  </label>
+                  <input
+                    id="currentPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label
+                    htmlFor="newPassword"
+                    className="block mb-1 font-medium"
+                  >
+                    New password
+                  </label>
+                  <input
+                    id="newPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block mb-1 font-medium"
+                  >
+                    Confirm new password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end flex-wrap gap-2">
+                  <button
+                    onClick={handleDiscard}
+                    className="cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1.5 px-4 text-sm hover:bg-gray-100 transition ease-in"
+                    type="button"
+                  >
+                    Discard
+                  </button>
+                  <button
+                    className={`cursor-pointer text-white rounded-md py-1.5 px-4 text-sm ${
+                      isFormValid
+                        ? "bg-[#06040E] border border-[#06040E]"
+                        : "bg-gray-300 border border-gray-300 pointer-events-none"
+                    }`}
+                    type="submit"
+                    disabled={!isFormValid}
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default EditPassword;

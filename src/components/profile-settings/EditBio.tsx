@@ -6,17 +6,17 @@ interface EditBioProps {
   onEdit: (key: string | null) => void;
 }
 
+const MAX_LENGTH = 120;
+
 const EditBio: React.FC<EditBioProps> = ({
   activeEdit,
   onEdit,
 }) => {
-  // saved values shown when not editing
-  const [savedFirst, setSavedFirst] = useState("");
-  const [savedLast, setSavedLast] = useState("");
+  // saved bio (shown when not editing)
+  const [savedBio, setSavedBio] = useState("");
 
-  // form inputs
-  const [firstName, setFirstName] = useState(savedFirst);
-  const [lastName, setLastName] = useState(savedLast);
+  // editable bio field
+  const [bio, setBio] = useState(savedBio);
 
   // ref for the edit form container to detect outside clicks
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -24,10 +24,9 @@ const EditBio: React.FC<EditBioProps> = ({
   // when edit opens, populate inputs with saved values
   useEffect(() => {
     if (activeEdit === "bio") {
-      setFirstName(savedFirst);
-      setLastName(savedLast);
+      setBio(savedBio);
     }
-  }, [activeEdit, savedFirst, savedLast]);
+  }, [activeEdit, savedBio]);
 
   // close edit when clicking outside the form
   useEffect(() => {
@@ -45,7 +44,7 @@ const EditBio: React.FC<EditBioProps> = ({
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [activeEdit, onEdit]);
 
-  const isFormValid = firstName.trim() !== "" && lastName.trim() !== "";
+  const isFormValid = bio.trim().length <= MAX_LENGTH;
 
   const openEdit = () => {
     if (!activeEdit) onEdit && onEdit("bio");
@@ -53,20 +52,20 @@ const EditBio: React.FC<EditBioProps> = ({
 
   const handleDiscard = (e?: React.MouseEvent) => {
     e?.preventDefault();
-    // reset inputs and close
-    setFirstName(savedFirst);
-    setLastName(savedLast);
+    // reset and close
+    setBio(savedBio);
     onEdit && onEdit(null);
   };
 
   const handleSave = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!isFormValid) return;
-    setSavedFirst(firstName.trim());
-    setSavedLast(lastName.trim());
+    setSavedBio(bio.trim());
     onEdit && onEdit(null);
-    toast.success("Name updated");
+    toast.success("Bio updated");
   };
+
+  const remaining = MAX_LENGTH - bio.length;
 
   return (
    <div>
@@ -75,14 +74,14 @@ const EditBio: React.FC<EditBioProps> = ({
       <div className='text-sm max-sm:px-6'>
         <div className="block md:hidden font-semibold">Bio</div>
         <div className="flex justify-between items-center">
-          <div className='truncate mr-3'>
+          <div className='truncate max-sm:max-w-[180px] mr-3'>
             <span className='text-gray-400'>
-              {(!savedFirst && !savedLast) ? 'Describe yourself.' : ''}
+              {!savedBio ? 'Describe yourself.' : ''}
             </span>
-            <div className='truncate text-wrap'>{savedFirst} {savedLast}</div>
+            <div className='truncate text-wrap'>{savedBio}</div>
           </div>
 
-          {/* Edit control - faded and non-interactive when any edit is active */}
+          {/* Edit control */}
           <div
             onClick={openEdit}
             className={
@@ -91,7 +90,7 @@ const EditBio: React.FC<EditBioProps> = ({
             }
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit(); }}
+            onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter')) openEdit(); }}
             aria-disabled={!!activeEdit}
           >
             <span className={activeEdit ? 'text-gray-500' : ''}>Edit</span>
@@ -117,53 +116,29 @@ const EditBio: React.FC<EditBioProps> = ({
           {/* card header */}
           <div className='flex justify-between items-center px-6 pt-5'>
             <div>
-              <div className="font-semibold ">Name</div>
+              <div className="font-semibold">Bio</div>
+              <p className="text-[13px] text-gray-500 mt-1">
+                Your bio is shared comments and community posts.
+              </p>
             </div>
           </div>
 
           {/* card body */}
           <div className='px-6 py-5'>
             <form onSubmit={handleSave}>
-              <div className='flex flex-wrap'>
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='firstname'
-                    >
-                        First name
-                    </label>
-                    <input 
-                      id='firstname'
-                      type="text"
-                      placeholder="e.g. Agu"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='lastname'
-                    >
-                        Last name
-                    </label>
-                    <input 
-                      id='lastname'
-                      type="text"
-                      placeholder="e.g. James"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
+              <div className='mb-3'>
+                <textarea
+                  id='bio'
+                  placeholder="Describe yourself."
+                  className='w-full border border-gray-300 rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-gray-500'
+                  maxLength={MAX_LENGTH}
+                  rows={2}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                />
+                <p className='text-xs text-gray-400 mt-1'>
+                  {remaining} characters remaining
+                </p>
               </div>
 
               <div className='flex justify-end flex-wrap gap-2'>

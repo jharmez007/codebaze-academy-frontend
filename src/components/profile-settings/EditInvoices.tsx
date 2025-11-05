@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner';
+import { CircleCheck, Download } from "lucide-react"
 
 interface EditInvoicesProps {
   activeEdit: string | null;
@@ -10,28 +10,19 @@ const EditInvoices: React.FC<EditInvoicesProps> = ({
   activeEdit,
   onEdit,
 }) => {
-  // saved values shown when not editing
-  const [savedFirst, setSavedFirst] = useState("");
-  const [savedLast, setSavedLast] = useState("");
-
-  // form inputs
-  const [firstName, setFirstName] = useState(savedFirst);
-  const [lastName, setLastName] = useState(savedLast);
-
-  // ref for the edit form container to detect outside clicks
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  // when edit opens, populate inputs with saved values
-  useEffect(() => {
-    if (activeEdit === "invoices") {
-      setFirstName(savedFirst);
-      setLastName(savedLast);
-    }
-  }, [activeEdit, savedFirst, savedLast]);
+  // Simulated invoice data (can later come from props or API)
+  const [invoice] = useState({
+    date: 'Today',
+    item: 'Frontend Foundations',
+    status: 'Paid',
+    amount: '$0.00',
+  });
 
-  // close edit when clicking outside the form
+  // Close when clicking outside
   useEffect(() => {
-    if (activeEdit !== "invoices") return;
+    if (activeEdit !== 'invoices') return;
 
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as Node | null;
@@ -41,155 +32,137 @@ const EditInvoices: React.FC<EditInvoicesProps> = ({
       }
     };
 
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [activeEdit, onEdit]);
 
-  const isFormValid = firstName.trim() !== "" && lastName.trim() !== "";
-
   const openEdit = () => {
-    if (!activeEdit) onEdit && onEdit("invoices");
+    if (!activeEdit) onEdit && onEdit('invoices');
   };
 
-  const handleDiscard = (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    // reset inputs and close
-    setFirstName(savedFirst);
-    setLastName(savedLast);
+  const handleDismiss = () => {
     onEdit && onEdit(null);
-  };
-
-  const handleSave = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!isFormValid) return;
-    setSavedFirst(firstName.trim());
-    setSavedLast(lastName.trim());
-    onEdit && onEdit(null);
-    toast.success("Name updated");
   };
 
   return (
-   <div>
-    {/* Display block - hidden when editing */}
-    {activeEdit !== "invoices" && (
-      <div className='text-sm max-sm:px-6'>
-        <div className="block md:hidden font-semibold">Invoices</div>
-        <div className="flex justify-between items-center">
-          <div className='truncate mr-3'>
-            <span className='text-gray-400'>
-              {(!savedFirst && !savedLast) ? 'Your invoice' : ''}
-            </span>
-            <div className='truncate text-wrap'>{savedFirst} {savedLast}</div>
-          </div>
+    <div>
+      {/* Display block - hidden when viewing */}
+      {activeEdit !== 'invoices' && (
+        <div className="text-sm max-sm:px-6">
+          <div className="block md:hidden font-semibold">Invoices</div>
+          <div className="flex justify-between items-center">
+            <div className="truncate mr-3">
+              <span className="text-gray-400">View your invoice</span>
+            </div>
 
-          {/* Edit control - faded and non-interactive when any edit is active */}
-          <div
-            onClick={openEdit}
-            className={
-              `cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4
-               ${activeEdit ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-300'}`
-            }
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit(); }}
-            aria-disabled={!!activeEdit}
-          >
-            <span className={activeEdit ? 'text-gray-500' : ''}>View</span>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Edit Form - shown when editing */}
-    {activeEdit === "invoices" && (
-      <>
-        {/* overlay disables all interaction/hover outside the form */}
-        <div
-          className="fixed inset-0 bg-transparent z-40"
-          onMouseDown={() => onEdit && onEdit(null)}
-          aria-hidden
-        />
-
-        <div
-          ref={formRef}
-          className='edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm'
-        >
-          {/* card header */}
-          <div className='flex justify-between items-center px-6 pt-5'>
-            <div>
-              <div className="font-semibold ">Name</div>
+            <div
+              onClick={openEdit}
+              className={`cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md transition py-2 px-4
+                ${activeEdit ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-300'}`}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit();
+              }}
+              aria-disabled={!!activeEdit}
+            >
+              <span className={activeEdit ? 'text-gray-500' : ''}>View</span>
             </div>
           </div>
-
-          {/* card body */}
-          <div className='px-6 py-5'>
-            <form onSubmit={handleSave}>
-              <div className='flex flex-wrap'>
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='firstname'
-                    >
-                        First name
-                    </label>
-                    <input 
-                      id='firstname'
-                      type="text"
-                      placeholder="e.g. Agu"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="px-1 grow-0 shrink-0 basis-[50%]">
-                  <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='lastname'
-                    >
-                        Last name
-                    </label>
-                    <input 
-                      id='lastname'
-                      type="text"
-                      placeholder="e.g. James"
-                      className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500'
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className='flex justify-end flex-wrap gap-2'>
-                <button
-                  onClick={handleDiscard}
-                  className='cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in'
-                  type="button"
-                >
-                  Discard
-                </button>
-                <button
-                  className={`cursor-pointer text-white rounded-md py-1 px-3 text-sm 
-                    ${isFormValid ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border border-gray-300 pointer-events-none'}`}
-                  type="submit"
-                  disabled={!isFormValid}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
-      </>
-    )}
-   </div>
-  )
-}
+      )}
+
+      {/* Invoice Summary - shown when active */}
+      {activeEdit === 'invoices' && (
+        <>
+          {/* overlay disables all interaction/hover outside */}
+          <div
+            className="fixed inset-0 bg-transparent z-40"
+            onMouseDown={() => onEdit && onEdit(null)}
+            aria-hidden
+          />
+
+          <div
+            ref={formRef}
+            className="edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm max-w-full mx-4 sm:mx-auto"
+          >
+            {/* Header */}
+            <div className="px-4 sm:px-6 pt-5">
+              <div className="font-semibold mb-2">Invoices</div>
+            </div>
+
+            {/* Table-like content */}
+            <div className="px-4 sm:px-6 pb-5 overflow-x-auto">
+              {/* container allows horizontal scroll on very small screens but adapts to stacked cards */}
+              <div className="w-full">
+                {/* Grid header for md+ screens */}
+                <div className="hidden md:grid grid-cols-5 font-semibold text-gray-500 text-sm border-b border-gray-200 px-4 py-2">
+                  <div>Date</div>
+                  <div>Items</div>
+                  <div>Status</div>
+                  <div>Amount</div>
+                  <div />
+                </div>
+
+                {/* Single invoice - responsive: stacked on small, row on md+ */}
+                <div className="bg-white border border-gray-200 rounded-md mt-3 p-4 md:p-0">
+                  <div className="grid md:grid-cols-5 gap-3 items-center px-0 md:px-4 py-3">
+                    {/* Date */}
+                    <div className="text-sm text-gray-600 md:py-0">
+                      <div className="md:hidden text-xs text-gray-500 mb-1">Date</div>
+                      {invoice.date}
+                    </div>
+
+                    {/* Item */}
+                    <div className="text-sm md:font-medium text-gray-800 md:py-0">
+                      <div className="md:hidden text-xs text-gray-500 mb-1">Items</div>
+                      {invoice.item}
+                    </div>
+
+                    {/* Status */}
+                    <div className="md:py-0">
+                      <div className="md:hidden text-xs text-gray-500 mb-1">Status</div>
+                      <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-medium px-2 py-1 rounded-full border border-green-200">
+                        <CircleCheck className='w-4 h-4' />
+                        {invoice.status}
+                      </span>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-sm md:font-medium text-gray-800 md:py-0">
+                      <div className="md:hidden text-xs text-gray-500 mb-1">Amount</div>
+                      {invoice.amount}
+                    </div>
+
+                    {/* Actions: full width on small, right aligned on md+ */}
+                    <div className="flex justify-end md:justify-end">
+                      <button
+                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium rounded-md py-2 px-3 hover:bg-gray-100 transition w-full md:w-auto"
+                        onClick={() => console.log('Download PDF')}
+                      >
+                        <Download className='w-4 h-4' />
+                        <span>PDF</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dismiss button */}
+              <div className="flex justify-end mt-4 px-0 sm:px-0">
+                <button
+                  onClick={handleDismiss}
+                  className="cursor-pointer text-gray-700 border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default EditInvoices;
