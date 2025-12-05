@@ -1,28 +1,27 @@
-# ---------- 1. Build Stage ----------
-FROM node:20-slim AS builder
+# ---- Build Stage ----
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install required OS packages for Next.js
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 g++ make && \
-    rm -rf /var/lib/apt/lists/*
+# Install required build tools
+RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 
-COPY . .
+COPY . ./
 RUN npm run build
 
 
-# ---------- 2. Production Stage ----------
-FROM node:20-alpine AS runner
+# ---- Production Stage ----
+FROM node:18-alpine AS runner
 
 WORKDIR /app
 
+# Copy only what's needed for running Next.js
 COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
 
 EXPOSE 3000
