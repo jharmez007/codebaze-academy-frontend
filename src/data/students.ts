@@ -1,4 +1,14 @@
-export const students = [
+export type Student = {
+  id: string;
+  name: string;
+  email: string;
+  courses: { title: string; progress: number }[];
+  signupDate: string;
+  status: "active" | "suspended"; // strict typing
+  activity: { id: number; type: string; text: string; date: string }[];
+};
+
+export const students: Student[] = [
   {
     id: "stu1",
     name: "John Doe",
