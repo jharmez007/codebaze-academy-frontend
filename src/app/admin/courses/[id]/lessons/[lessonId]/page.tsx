@@ -6,7 +6,7 @@ import LessonEditor from "@/components/admin/courses/LessonEditor";
 import { getLessonById, updateLesson } from "@/services/courseService";
 import { toast } from "sonner";
 
-const BASE_SERVER_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BASE_SERVER_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 // -----------------------------
 // Correct Lesson Backend Shape

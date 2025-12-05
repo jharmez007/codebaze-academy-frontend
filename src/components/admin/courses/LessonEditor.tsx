@@ -17,7 +17,7 @@ import {
 import { addQuiz, deleteQuiz as deleteQuizService, updateQuiz as updateQuizService } from "@/services/courseService";
 import { toast } from "sonner";
 
-const BASE_SERVER_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BASE_SERVER_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 function mapBackendQuizToEditor(quiz: any) {
   let type = "multiple_choice";

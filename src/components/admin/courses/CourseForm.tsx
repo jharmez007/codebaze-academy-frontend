@@ -55,7 +55,7 @@ type CourseFormProps = {
   id?: any;
 };
 
-const BASE_SERVER_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+const BASE_SERVER_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 
 export default function CourseForm({ defaultValues, isEdit, id }: CourseFormProps) {
