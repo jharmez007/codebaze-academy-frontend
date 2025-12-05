@@ -1,12 +1,10 @@
-version: '3.9'
-
 services:
   frontend:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: codebaze_frontend
     ports:
       - "3000:3000"
     env_file:
       - .env
-    # depends_on:
-    #   - backend   # optional if frontend calls your backend container

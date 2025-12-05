@@ -1,23 +1,30 @@
-# Use Node.js LTS as base
-FROM node:20-alpine
+# ---------- 1. Build Stage ----------
+FROM node:20-slim AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
+# Install required OS packages for Next.js
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 g++ make && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+COPY package.json package-lock.json ./
 RUN npm install --legacy-peer-deps
 
-# Copy the rest of the source code
 COPY . .
-
-# Build the Next.js app
 RUN npm run build
 
-# Expose the port Next.js will run on
+
+# ---------- 2. Production Stage ----------
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
 EXPOSE 3000
 
-# Start the app
 CMD ["npm", "start"]
