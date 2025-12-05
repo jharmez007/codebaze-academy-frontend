@@ -8,6 +8,19 @@ import { toast } from "sonner";
 
 const BASE_SERVER_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
+// -----------------------------
+// Correct Lesson Backend Shape
+// -----------------------------
+type LessonApiResponse = {
+  id: number;
+  title: string;
+  video_url?: string;
+  document_url?: string;
+  notes?: string;
+  reference_link?: string;
+  // add more fields if your backend returns more
+};
+
 export default function LessonPage() {
   const { id, lessonId } = useParams();
   const [currentLesson, setCurrentLesson] = useState<any>(null);
@@ -23,38 +36,43 @@ export default function LessonPage() {
 
     getLessonById(Number(lessonId))
       .then((res) => {
-        if (res.data) {
-          // Map API fields to LessonEditor format
-          const lesson = {
-            ...res.data,
-            video: {
-              url: res.data.video_url
-                ? res.data.video_url.startsWith("http")
-                  ? res.data.video_url
-                  : `${BASE_SERVER_URL}${res.data.video_url}`
-                : "",
-            },
-            notes: {
-              url: res.data.document_url
-                ? res.data.document_url.startsWith("http")
-                  ? res.data.document_url
-                  : `${BASE_SERVER_URL}${res.data.document_url}`
-                : "",
-              text: res.data.notes || "",
-            },
-            reference_links: (() => {
-              try {
-                const arr = JSON.parse(res.data.reference_link);
-                return Array.isArray(arr) ? arr : [];
-              } catch {
-                return [];
-              }
-            })(),
-          };
-          setCurrentLesson(lesson);
-        } else {
+        if (!res.data) {
           toast.error(res.message || "Lesson not found");
+          setLoading(false);
+          return;
         }
+
+        // Cast response to typed lesson object
+        const data = res.data as LessonApiResponse;
+
+        const lesson = {
+          ...data,
+          video: {
+            url: data.video_url
+              ? data.video_url.startsWith("http")
+                ? data.video_url
+                : `${BASE_SERVER_URL}${data.video_url}`
+              : "",
+          },
+          notes: {
+            url: data.document_url
+              ? data.document_url.startsWith("http")
+                ? data.document_url
+                : `${BASE_SERVER_URL}${data.document_url}`
+              : "",
+            text: data.notes || "",
+          },
+          reference_links: (() => {
+            try {
+              const arr = JSON.parse(data.reference_link || "[]");
+              return Array.isArray(arr) ? arr : [];
+            } catch {
+              return [];
+            }
+          })(),
+        };
+
+        setCurrentLesson(lesson);
         setLoading(false);
       })
       .catch((err) => {
@@ -75,7 +93,7 @@ export default function LessonPage() {
         "data",
         JSON.stringify({
           title: updatedLesson.title,
-          notes: updatedLesson.notes?.text || "Updated lesson note",
+          notes: updatedLesson.notes?.text || "",
           reference_link: JSON.stringify(updatedLesson.reference_links || []),
         })
       );
