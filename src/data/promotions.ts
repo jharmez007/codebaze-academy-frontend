@@ -1,8 +1,10 @@
-export const promotions = [
+import type { Promotion } from "@/components/admin/promotions/PromotionsTable";
+
+export const promotions: Promotion[] = [
   {
     id: "promo1",
     code: "WELCOME50",
-    type: "percentage", // percentage | fixed
+    type: "percentage",
     value: 50,
     course: "All Courses",
     expiry: "2025-12-31",
