@@ -10,14 +10,20 @@ import { verifyToken, sendVerificationOTP } from "@/services/authService";
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
 
+  const [email, setEmail] = useState(""); // ✅ move email into state
   const [otp, setOtp] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Only read searchParams on mount
   useEffect(() => {
-    let timer: any;
+    const e = searchParams.get("email");
+    if (e) setEmail(e);
+  }, [searchParams]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (cooldown > 0) {
       timer = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
     }
@@ -42,9 +48,8 @@ export default function VerifyEmailPage() {
   };
 
   const handleResend = async () => {
-    let payload = { email };
     if (cooldown > 0) return;
-    const { status, message } = await sendVerificationOTP(payload);
+    const { status, message } = await sendVerificationOTP({ email });
     if (status && status >= 200 && status < 300) {
       successToast("New OTP sent to your email");
       setCooldown(60);
@@ -72,18 +77,17 @@ export default function VerifyEmailPage() {
           className="text-center tracking-widest mb-4"
         />
 
-        <Button onClick={handleVerify} disabled={loading} className="w-full mb-3">
+        <Button onClick={handleVerify} disabled={loading || !email} className="w-full mb-3">
           {loading ? "Verifying..." : "Verify Email"}
         </Button>
 
         <div className="text-center">
           {cooldown > 0 ? (
-            <p className="text-sm text-gray-500">
-              Resend OTP in {cooldown}s
-            </p>
+            <p className="text-sm text-gray-500">Resend OTP in {cooldown}s</p>
           ) : (
             <button
               onClick={handleResend}
+              disabled={!email}
               className="text-sm text-green-600 hover:underline font-medium"
             >
               Resend OTP
