@@ -36,7 +36,8 @@ export default function CoursesPage() {
           Add Course
         </a>
       </div>
-      <CoursesTable data={courses} />
+      {/* <CoursesTable data={courses} /> */}
+      <CoursesTable />
     </div>
   );
 }
