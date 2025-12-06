@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { UserRound, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { getProfile, updateProfile } from "@/services/profileService";
+import { normalizeImagePath } from "@/utils/normalizeImagePath"; 
 
 interface EditPhotoProps {
   activeEdit: string | null;
@@ -11,20 +13,32 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
   activeEdit,
   onEdit,
 }) => {
-  // saved photo (shown when not editing)
+  // saved photo from backend
   const [savedPhoto, setSavedPhoto] = useState<string | null>(null);
 
   // file input
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  // modal state for full-size preview
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // ref for the edit form container to detect outside clicks
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  // when edit opens, reset preview
+  // ------------------------------------------------------------
+  // 🔥 Load profile on mount → prefill savedPhoto
+  // ------------------------------------------------------------
+  useEffect(() => {
+    async function loadProfile() {
+      const { data } = await getProfile();
+      if (data?.profile_photo) {
+        setSavedPhoto(data.profile_photo);
+        setPreviewUrl(data.profile_photo);
+      }
+    }
+    loadProfile();
+  }, []);
+
+  // When edit opens, reset values
   useEffect(() => {
     if (activeEdit === "photo") {
       setPreviewUrl(savedPhoto);
@@ -32,15 +46,14 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
     }
   }, [activeEdit, savedPhoto]);
 
-  // close edit when clicking outside the form
+  // close edit when clicking outside
   useEffect(() => {
     if (activeEdit !== "photo") return;
 
     const onPointerDown = (e: PointerEvent) => {
       const target = e.target as Node | null;
-      if (!formRef.current) return;
-      if (target && !formRef.current.contains(target)) {
-        onEdit && onEdit(null);
+      if (formRef.current && !formRef.current.contains(target!)) {
+        onEdit(null);
       }
     };
 
@@ -49,16 +62,21 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
   }, [activeEdit, onEdit]);
 
   const openEdit = () => {
-    if (!activeEdit) onEdit && onEdit("photo");
+    if (!activeEdit) onEdit("photo");
   };
 
+  // ------------------------------------------------------------
+  // Upload and preview
+  // ------------------------------------------------------------
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File must be under 5MB");
       return;
     }
+
     setSelectedPhoto(file);
     setPreviewUrl(URL.createObjectURL(file));
   };
@@ -67,26 +85,41 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
     e?.preventDefault();
     setSelectedPhoto(null);
     setPreviewUrl(savedPhoto);
-    onEdit && onEdit(null);
     setShowPreviewModal(false);
+    onEdit(null);
   };
 
-  const handleSave = (e?: React.FormEvent) => {
+  // ------------------------------------------------------------
+  // 🔥 Save photo → send PATCH /profile
+  // ------------------------------------------------------------
+  const handleSave = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!selectedPhoto) return;
-    setSavedPhoto(previewUrl);
-    onEdit && onEdit(null);
-    toast.success("Photo updated");
-    setShowPreviewModal(false);
+
+    const res = await updateProfile({ photo: selectedPhoto });
+
+    if (res?.status === 200) {
+      toast.success("Photo updated");
+
+      // backend returns updated URL — fetch again or use patch response
+      const { data } = await getProfile();
+
+      setSavedPhoto(data?.profile_photo || null);
+      setPreviewUrl(data?.profile_photo || null);
+
+      onEdit(null);
+      setShowPreviewModal(false);
+    } else {
+      toast.error(res?.message || "Failed to update photo");
+    }
   };
 
-  // open modal when user clicks the preview image
+  // modal preview
   const handlePreviewClick = () => {
-    if (!previewUrl) return;
-    setShowPreviewModal(true);
+    if (previewUrl) setShowPreviewModal(true);
   };
 
-  // close modal on escape or outside click
+  // Modal: ESC close
   useEffect(() => {
     if (!showPreviewModal) return;
     const onKey = (e: KeyboardEvent) => {
@@ -96,9 +129,11 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
     return () => document.removeEventListener("keydown", onKey);
   }, [showPreviewModal]);
 
+  // ------------------------------------------------------------
+
   return (
    <div>
-    {/* Display block - hidden when editing */}
+    {/* Display block */}
     {activeEdit !== "photo" && (
       <div className='text-sm max-sm:px-6'>
         <div className="block md:hidden font-semibold">Photo</div>
@@ -106,7 +141,7 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
           <div className='truncate mr-3 flex items-center'>
             {savedPhoto ? (
               <img
-                src={savedPhoto}
+                src={normalizeImagePath(savedPhoto)}
                 alt="Profile"
                 className="w-9 h-9 rounded-full object-cover border border-gray-200"
               />
@@ -117,7 +152,6 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
             )}
           </div>
 
-          {/* Edit control */}
           <div
             onClick={openEdit}
             className={
@@ -126,29 +160,22 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
             }
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => { if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit(); }}
-            aria-disabled={!!activeEdit}
           >
-            <span className={activeEdit ? 'text-gray-500' : ''}>Edit</span>
+            <span>Edit</span>
           </div>
         </div>
       </div>
     )}
 
-    {/* Edit Form - shown when editing */}
+    {/* Edit Form */}
     {activeEdit === "photo" && (
       <>
-        <div
-          className="fixed inset-0 bg-transparent z-40"
-          onMouseDown={() => onEdit && onEdit(null)}
-          aria-hidden
-        />
+        <div className="fixed inset-0 bg-transparent z-40" aria-hidden />
 
         <div
           ref={formRef}
           className='edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm'
         >
-          {/* card header */}
           <div className='flex justify-between items-center px-6 pt-5'>
             <div>
               <div className="font-semibold">Photo</div>
@@ -158,7 +185,6 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
             </div>
           </div>
 
-          {/* card body */}
           <div className='px-6 py-5'>
             <form onSubmit={handleSave}>
               <div className="mb-3">
@@ -173,50 +199,44 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
                     </span>
                   </div>
                 </label>
+
                 <input
                   id="photoUpload"
                   type="file"
-                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  accept="image/png,image/jpeg,image/webp"
                   className="hidden"
                   onChange={handleFileChange}
                 />
+
                 <p className="text-xs text-gray-400 mt-1">
-                  PNG, JPEG, GIF, or WEBP up to 5 MB.
+                  PNG, JPEG, WEBP up to 5MB.
                 </p>
               </div>
 
               {previewUrl && (
                 <div className="mt-3">
                   <img
-                    src={previewUrl}
+                    src={previewUrl.startsWith("blob:") ? previewUrl : normalizeImagePath(previewUrl)}
                     alt="Preview"
                     className="w-20 h-20 rounded-full object-cover cursor-pointer border border-gray-200"
                     onClick={handlePreviewClick}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === "Enter") handlePreviewClick(); }}
                   />
                 </div>
               )}
 
-              {/* Full-size preview modal */}
+              {/* Modal */}
               {showPreviewModal && previewUrl && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70">
-                  <div
-                    className="relative max-w-4xl w-full mx-4"
-                    role="dialog"
-                    aria-modal="true"
-                  >
+                  <div className="relative max-w-4xl w-full mx-4" role="dialog">
                     <button
                       onClick={() => setShowPreviewModal(false)}
-                      className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 cursor-pointer hover:bg-white text-sm"
-                      aria-label="Close preview"
+                      className="absolute top-3 right-3 z-10 rounded bg-white/90 p-2 hover:bg-white"
                     >
                       Cancel
                     </button>
 
                     <div className="bg-white rounded-md overflow-hidden">
-                      <img src={previewUrl} alt="Full preview" className="w-full h-auto max-h-[80vh] object-contain bg-black"/>
+                      <img src={previewUrl.startsWith("blob:") ? previewUrl : normalizeImagePath(previewUrl)} alt="profile-pic" className="w-full max-h-[80vh] object-contain bg-black"/>
                     </div>
                   </div>
                 </div>
@@ -225,14 +245,15 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
               <div className='flex justify-end flex-wrap gap-2 mt-5'>
                 <button
                   onClick={handleDiscard}
-                  className='cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in'
+                  className='cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200'
                   type="button"
                 >
                   Discard
                 </button>
+
                 <button
                   className={`cursor-pointer text-white rounded-md py-1 px-3 text-sm 
-                    ${selectedPhoto ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border border-gray-300 pointer-events-none'}`}
+                    ${selectedPhoto ? 'bg-[#06040E] border border-[#06040E]' : 'bg-gray-300 border-gray-300 pointer-events-none'}`}
                   type="submit"
                   disabled={!selectedPhoto}
                 >
@@ -245,7 +266,7 @@ const EditPhoto: React.FC<EditPhotoProps> = ({
       </>
     )}
    </div>
-  )
-}
+  );
+};
 
 export default EditPhoto;

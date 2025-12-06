@@ -1,10 +1,11 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { verifyResetToken, resetPassword } from "@/services/authService"; 
+import { verifyResetToken, resetPassword } from "@/services/authService";
 
-export default function ResetPasswordPage() {
+function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -20,33 +21,36 @@ export default function ResetPasswordPage() {
 
   // Check token validity on mount
   useEffect(() => {
-  const checkToken = async () => {
-    if (!token) {
-      setExpired(true);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { status } = await verifyResetToken({ token, email });
-      if (status !== 200) {
+    const checkToken = async () => {
+      if (!token) {
         setExpired(true);
-        setError("Invalid or expired token.");
+        setLoading(false);
+        return;
       }
-    } catch (err: any) {
-      setExpired(true);
-      setError(err.message || "Invalid or expired token.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  checkToken();
-}, [token, searchParams]);
+      try {
+        const { status } = await verifyResetToken({ token, email });
+        if (status !== 200) {
+          setExpired(true);
+          setError("Invalid or expired token.");
+        }
+      } catch (err: any) {
+        setExpired(true);
+        setError(err.message || "Invalid or expired token.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    checkToken();
+  }, [token, searchParams]);
+
+  // password validation
+  const passwordValid =
+    password.length >= 6 && /[a-z]/.test(password) && /[A-Z]/.test(password);
 
   const canSubmit =
-    password.length >= 6 && confirmPassword.length >= 6 && password === confirmPassword;
+    passwordValid && confirmPassword.length >= 6 && password === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +64,13 @@ export default function ResetPasswordPage() {
 
     if (!token) {
       setError("Invalid or missing token");
+      return;
+    }
+
+    if (!passwordValid) {
+      setError(
+        "Password must be at least 6 characters and include both lower and upper case letters."
+      );
       return;
     }
 
@@ -135,6 +146,9 @@ export default function ResetPasswordPage() {
               />
               <p className="text-xs text-gray-600 mt-1">
                 Minimum 6 characters
+                {!passwordValid && password.length > 0 && (
+                  <span className="text-red-500"> — include both lower & upper case</span>
+                )}
               </p>
             </div>
 
@@ -153,6 +167,12 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
               />
+            </div>
+
+            <div className="mb-6 text-left">
+              {confirmPassword && password !== confirmPassword && (
+                <p className="text-red-500 text-sm mb-2">Passwords do not match</p>
+              )}
             </div>
 
             {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
@@ -177,5 +197,20 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ⬅ Wrap with Suspense (Fix for useSearchParams)
+export default function ResetPasswordWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-[75vh]">
+          <p>Loading...</p>
+        </div>
+      }
+    >
+      <ResetPasswordPage />
+    </Suspense>
   );
 }

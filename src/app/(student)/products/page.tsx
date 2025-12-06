@@ -5,8 +5,8 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ListFilter, ArrowUpDown, Search } from "lucide-react";
-import { products } from "@/data/products";
-
+import { getProducts } from "@/services/studentService";
+import { normalizeImagePath } from "@/utils/normalizeImagePath";
 
 const filters = [
   { key: "active", label: "Active products" },
@@ -22,7 +22,6 @@ const sortOptions = [
   { key: "dates", label: "Purchased" },
 ];
 
-// Circular Progress Component
 function CircularProgress({
   value,
   total,
@@ -72,6 +71,9 @@ export default function ProductsPage() {
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const filterRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
@@ -93,12 +95,55 @@ export default function ProductsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    let list = products;
+  // Fetch products from API
+  useEffect(() => {
+    async function fetchProducts() {
+      setLoading(true);
+      setError(null);
+      const result = await getProducts();
 
-    if (show !== "all") {
-      list = list.filter((p) => p.type === show);
+      if ("data" in result) {
+        const data = result.data;
+
+        // Normalizing backend response shape
+        const combined = [
+          ...(data.enrolled_courses ?? []),
+          ...(data.paid_but_not_enrolled ?? []),
+        ];
+
+        // Convert backend fields to UI product structure
+        const transformed = combined.map((item: any) => ({
+          id: item.course_id,
+          name: item.title,
+          slug: item.slug,
+          image: item.image?.replace(/\\/g, "/"),
+          completed: item.progress ?? 0,
+          total: item.total_lessons ?? 0,
+          date: item.enrolled_at,
+          status: item.status, 
+        }));
+
+        setProducts(transformed);
+      } else {
+        setError(result.message || "Failed to load products.");
+      }
+
+      setLoading(false);
     }
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    let list = [...products];
+
+     if (show === "active") {
+      list = list.filter((p) => p.status === "active");
+    } else if (show === "courses") {
+      list = list.filter((p) => p.status === "paid" || p.status === "active");
+    } else if (show === "expired" || show === "downloads" || show === "webinars" || show === "coaching") {
+      list = list.filter((p) => p.status === "expired");
+    }
+    // other filters stay untouched
 
     if (sort === "name") {
       list = [...list].sort((a, b) => a.name.localeCompare(b.name));
@@ -109,7 +154,7 @@ export default function ProductsPage() {
     }
 
     return list;
-  }, [show, sort]);
+  }, [products, show, sort]);
 
   const handleFilterChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -130,14 +175,13 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className=" bg-white">
+    <div className="bg-white">
       <div className="p-6 bg-white max-w-5xl mx-auto">
         <h1 className="text-lg text-black font-semibold mb-4">Products</h1>
 
         <div className="border border-gray-300 rounded-md p-4">
           {/* Filters */}
           <div className="flex gap-2 mb-4 relative flex-wrap">
-            {/* Search input with icon */}
             <div className="relative flex-1 min-w-[120px]">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -147,7 +191,6 @@ export default function ProductsPage() {
               />
             </div>
 
-            {/* Filter dropdown */}
             <div className="relative" ref={filterRef}>
               <button
                 onClick={() => {
@@ -184,7 +227,6 @@ export default function ProductsPage() {
               )}
             </div>
 
-            {/* Sort dropdown */}
             <div className="relative" ref={sortRef}>
               <button
                 onClick={() => {
@@ -223,17 +265,43 @@ export default function ProductsPage() {
           </div>
 
           {/* Product list */}
-          {filteredProducts.length > 0 ? (
+          {loading ? (
+            <div className="flex flex-col gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 rounded-md p-3 animate-pulse"
+                >
+                  {/* Image Skeleton */}
+                  <div className="w-[60px] h-[60px] bg-gray-200 rounded" />
+
+                  {/* Text + Progress Skeleton */}
+                  <div className="flex flex-col gap-2 flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-40" />
+                    <div className="h-3 bg-gray-200 rounded w-28" />
+                  </div>
+
+                  {/* CTA Button Skeleton */}
+                  <div className="w-20 h-8 bg-gray-200 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <p className="text-center py-10 text-red-500">{error}</p>
+          ) : filteredProducts.length > 0 ? (
             <div className="flex flex-col gap-4">
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
                   className="flex items-center gap-4 rounded-md p-3"
                 >
-                  {/* Image as link */}
-                  <Link href={`/course/${product.slug}`}>
+                  <Link href={
+                      product.status !== "active"
+                        ? `/checkout/${product.slug}`
+                        : `/course/${product.slug}`
+                    }>
                     <Image
-                      src={product.image}
+                      src={normalizeImagePath(product.image as any)}
                       alt={product.name}
                       width={60}
                       height={60}
@@ -242,24 +310,38 @@ export default function ProductsPage() {
                   </Link>
 
                   <div className="flex flex-col">
-                    {/* Product name as link */}
                     <Link
-                      href={`/course/${product.slug}`}
+                      href={
+                      product.status !== "active"
+                        ? `/checkout/${product.slug}`
+                        : `/course/${product.slug}`
+                    }
                       className="text-sm text-black font-semibold hover:underline"
                     >
                       {product.name}
                     </Link>
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <CircularProgress
-                        value={product.completed}
-                        total={product.total}
-                      />
-                      {product.completed}/{product.total} completed
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      Purchased: {new Date(product.date).toLocaleDateString()}
-                    </div>
+                    {product.status === "active" ? (
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <CircularProgress value={product.completed} total={product.total} />
+                        {product.completed}/{product.total} completed
+                      </div>
+                    ) : (
+                      <p className="text-xs text-orange-600 font-medium mt-1">
+                        Payment received — not enrolled
+                      </p>
+                    )}
                   </div>
+                 <div className="self-end">
+                   {/* CTA BUTTON */}
+                    {product.status !== "active" && (
+                      <button
+                        onClick={() => router.push(`/checkout/${product.slug}`)}
+                        className="px-3 py-2 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        Enroll Now
+                      </button>
+                    )}
+                 </div>
                 </div>
               ))}
             </div>

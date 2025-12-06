@@ -7,4 +7,5 @@ export { default as Chatbot } from './Chatbot';
 export { default as VideoPlayer } from './VideoPlayer';
 export { default as Breadcrumb } from './Breadcrumb';
 export { default as Sidebar } from './Sidebar';
+export { default as QuizQuestion } from './QuizQuestion';
 

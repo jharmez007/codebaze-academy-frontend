@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,55 +12,127 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar"; // shadcn calendar if you have it
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { createPromo, updatePromo } from "../../../services/couponService";
+import { getCourses } from "../../../services/courseService";
+import type { Course } from "../../../services/courseService";
 
 type Promotion = {
-  id?: string;
+  id?: string | number;
   code: string;
-  type: "percentage" | "fixed";
+  type: "percentage" | "amount";
   value: number;
   course: string;
   expiry: string;
   maxUsage: number;
+  applies_to_all: boolean;
 };
 
 type PromotionFormProps = {
-  initialData?: Promotion; // if provided → edit mode
-  onSubmit: (promo: Promotion) => void;
+  initialData?: Promotion;
   onCancel: () => void;
+  onSuccess?: (newPromo: Promotion) => void;
 };
 
 export default function PromotionForm({
   initialData,
-  onSubmit,
   onCancel,
+  onSuccess,
 }: PromotionFormProps) {
   const [code, setCode] = useState(initialData?.code || "");
-  const [type, setType] = useState<"percentage" | "fixed">(
+  const [type, setType] = useState<"percentage" | "amount">(
     initialData?.type || "percentage"
   );
   const [value, setValue] = useState(initialData?.value || 0);
-  const [course, setCourse] = useState(initialData?.course || "All Courses");
   const [expiry, setExpiry] = useState<Date | undefined>(
     initialData ? new Date(initialData.expiry) : undefined
   );
   const [maxUsage, setMaxUsage] = useState(initialData?.maxUsage || 100);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+
+  const initialCourse = initialData?.applies_to_all
+  ? "All Courses"
+  : initialData?.course || "All Courses";
+
+const [course, setCourse] = useState(initialCourse);
+const [appliesToAll, setAppliesToAll] = useState(initialCourse === "All Courses");
+
+
+  // ✅ Fetch courses on mount
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const response = await getCourses();
+      if (response.data) {
+        setCourses(response.data);
+      } else {
+        toast.error(response.message || "Failed to load courses");
+      }
+      setLoadingCourses(false);
+    };
+    fetchCourses();
+  }, []);
+
+  // ✅ Handle submit (create or update)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || !expiry) return;
-    onSubmit({
-      id: initialData?.id || `promo_${Date.now()}`,
+
+    setLoading(true);
+    setError(null);
+
+    const payload = {
       code,
-      type,
-      value,
-      course,
-      expiry: expiry.toISOString(),
-      maxUsage,
-    });
+      type: "general",
+      discount_type: type === "percentage" ? "percent" : "amount",
+      discount_value: value,
+      max_uses: maxUsage,
+      valid_until: expiry.toISOString(),
+      commission: 0,
+      applies_to_all: appliesToAll,
+      course_ids: appliesToAll
+        ? []
+        : courses
+            .filter((c) => c.title === course)
+            .map((c) => c.id),
+    };
+
+    let response;
+
+    if (initialData?.id) {
+      response = await updatePromo(Number(initialData.id), payload);
+    } else {
+      response = await createPromo(payload);
+    }
+
+    setLoading(false);
+
+    if (response.status === 200 || response.status === 201) {
+      toast.success(
+        initialData ? "Coupon updated successfully" : "Coupon created successfully"
+      );
+
+      const newPromo: Promotion = {
+        id: response?.data?.coupon?.id ?? initialData?.id ?? `promo_${Date.now()}`,
+        code,
+        type,
+        value,
+        course,
+        expiry: expiry.toISOString(),
+        maxUsage,
+        applies_to_all: appliesToAll,
+      };
+
+      onSuccess?.(newPromo);
+    } else {
+      setError(response.message || "Operation failed");
+    }
   };
 
   return (
@@ -71,6 +144,8 @@ export default function PromotionForm({
         {initialData ? "Edit Promotion" : "Create Promotion"}
       </h2>
 
+      {error && <p className="text-red-500">{error}</p>}
+
       {/* Code */}
       <div className="space-y-1">
         <Label htmlFor="code">Promo Code</Label>
@@ -80,6 +155,7 @@ export default function PromotionForm({
           value={code}
           onChange={(e) => setCode(e.target.value)}
           required
+          disabled={!!initialData} // prevent editing code for existing promo
         />
       </div>
 
@@ -93,7 +169,7 @@ export default function PromotionForm({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="percentage">Percentage (%)</SelectItem>
-              <SelectItem value="fixed">Fixed Amount</SelectItem>
+              <SelectItem value="amount">Fixed Amount</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -113,17 +189,26 @@ export default function PromotionForm({
       {/* Course */}
       <div className="space-y-1">
         <Label>Course</Label>
-        <Select value={course} onValueChange={setCourse}>
+        <Select
+          value={course}
+          onValueChange={(v) => {
+            setCourse(v);
+            setAppliesToAll(v === "All Courses");
+          }}
+          disabled={loadingCourses}
+        >
           <SelectTrigger>
-            <SelectValue placeholder="Select course" />
+            <SelectValue
+              placeholder={loadingCourses ? "Loading..." : "Select course"}
+            />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All Courses">All Courses</SelectItem>
-            <SelectItem value="Intro to Web Development">
-              Intro to Web Development
-            </SelectItem>
-            <SelectItem value="React Basics">React Basics</SelectItem>
-            <SelectItem value="UI/UX Fundamentals">UI/UX Fundamentals</SelectItem>
+            {courses.map((c) => (
+              <SelectItem key={c.id} value={c.title}>
+                {c.title}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -169,7 +254,15 @@ export default function PromotionForm({
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit">{initialData ? "Save Changes" : "Create"}</Button>
+        <Button type="submit" disabled={loading}>
+          {loading
+            ? initialData
+              ? "Updating..."
+              : "Creating..."
+            : initialData
+            ? "Save Changes"
+            : "Create"}
+        </Button>
       </div>
     </form>
   );

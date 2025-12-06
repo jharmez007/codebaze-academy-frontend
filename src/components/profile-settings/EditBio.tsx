@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner';
+import { getProfile, updateProfile } from "@/services/profileService";
 
 interface EditBioProps {
   activeEdit: string | null;
@@ -20,6 +21,17 @@ const EditBio: React.FC<EditBioProps> = ({
 
   // ref for the edit form container to detect outside clicks
   const formRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    async function loadProfile() {
+      const result = await getProfile();
+      if (result.data) {
+        setSavedBio(result.data.bio ?? "");
+      }
+    }
+    loadProfile();
+  }, []);
+
 
   // when edit opens, populate inputs with saved values
   useEffect(() => {
@@ -57,13 +69,21 @@ const EditBio: React.FC<EditBioProps> = ({
     onEdit && onEdit(null);
   };
 
-  const handleSave = (e?: React.FormEvent) => {
+  const handleSave = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!isFormValid) return;
-    setSavedBio(bio.trim());
-    onEdit && onEdit(null);
-    toast.success("Bio updated");
+
+    const result = await updateProfile({bio: bio.trim()});
+
+    if (result.status === 200) {
+      setSavedBio(bio.trim());
+      onEdit && onEdit(null);
+      toast.success("Bio updated");
+    } else {
+      toast.error(result.message || "Failed to update bio");
+    }
   };
+
 
   const remaining = MAX_LENGTH - bio.length;
 

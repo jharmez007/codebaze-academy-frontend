@@ -6,17 +6,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { getCourses, Course } from "../services/studentCourseService";
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
-import { useCurrency } from "@/hooks/useCurency";
-
-const CoursePrice = ({ price }: { price: number }) => {
-  const displayPrice = useCurrency(price);
-  return (
-    <div className="mb-1 text-[#00bf63] font-semibold text-lg">
-      {price === 0 ? "Free" : displayPrice}
-    </div>
-  );
-};
-
 
 const HomeSectionContent = () => {
   const [courses, setCourses] = useState<Course[]>(() => {
@@ -29,7 +18,11 @@ const HomeSectionContent = () => {
 
   useEffect(() => {
     const fetchCourses = async () => {
-    const { data } = await getCourses();
+    const { data } = await getCourses({
+        headers: { "X-Dev-IP": "41.210.11.223" },
+      });
+      
+      console.log("Courses data fetched:", data);
     if (data && data.length > 0) {
       // Sort courses from latest to oldest
       const sortedData = data.sort(
@@ -73,7 +66,8 @@ const HomeSectionContent = () => {
             >
               {/* Course Image */}
               <div className="w-full md:w-2/3">
-                <Link href={`/lesson-content/${course.slug}`} prefetch>
+                <Link href={`/lesson-content/${course.slug}`} 
+               >
                   <Image
                     src={normalizeImagePath(course.image as any)}
                     alt={course.title}
@@ -87,8 +81,12 @@ const HomeSectionContent = () => {
 
               {/* Course Info */}
               <div className="w-full md:w-2/3 text-center md:text-left">
-                <CoursePrice price={course.price} />
-                <Link href={`/lesson-content/${course.slug}`} prefetch>
+                <div className="mb-1 text-[#00bf63] font-semibold text-lg">
+                  {course.price === 0
+                    ? "Free"
+                    : `${course.currency === "USD" ? "$" : "₦"}${course.price.toLocaleString()}`}
+                </div>
+                <Link href={`/lesson-content/${course.slug}`}>
                   <h3
                     className="text-xl md:text-4xl font-bold text-black transition-all duration-200 cursor-pointer hover:underline"
                     style={{

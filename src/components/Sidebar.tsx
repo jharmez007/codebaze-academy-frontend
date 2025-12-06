@@ -3,7 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, ChevronDown, SquarePlay } from "lucide-react";
+import { SquarePlay } from "lucide-react";
+import { IoCheckbox } from "react-icons/io5";
+import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
+import { normalizeImagePath } from "@/utils/normalizeImagePath";
 
 // Circular Progress Component
 function CircularProgress({
@@ -46,26 +49,27 @@ function CircularProgress({
   );
 }
 
-const Sidebar = ({ course, activeSection, activeLesson, fullscreen }: any) => {
-  if (fullscreen) return null;
-
+const Sidebar = ({ course, activeSection, activeLesson, fullscreen, completedLessons = new Set() }: any) => {
+  
   // track open/closed state per section
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>(
     () =>
       Object.fromEntries(course.sections.map((s: any) => [s.slug, true])) // all open by default
   );
-
+  
   const toggleSection = (slug: string) => {
     setOpenSections((prev) => ({ ...prev, [slug]: !prev[slug] }));
   };
-
+  
+  if (fullscreen) return null;
+  
   return (
     <aside className="w-100 bg-white p-4 overflow-y-auto hidden lg:block sticky top-0 h-screen scrollbar-hide">
       {/* Course header */}
       <div className="flex gap-3 mb-6">
         <Image
-          src={course.image}
-          alt={course.name}
+          src={normalizeImagePath(course.image as any)}
+          alt={course.title}
           width={100}
           height={100}
           className="rounded object-cover"
@@ -78,8 +82,8 @@ const Sidebar = ({ course, activeSection, activeLesson, fullscreen }: any) => {
             {course.title}
           </Link>
           <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <CircularProgress value={course.completed} total={course.total} />
-            {course.completed}/{course.total} completed
+            <CircularProgress value={completedLessons.size} total={course.total_lessons} />
+            {completedLessons.size}/{course.total_lessons} completed
           </div>
         </div>
       </div>
@@ -95,16 +99,16 @@ const Sidebar = ({ course, activeSection, activeLesson, fullscreen }: any) => {
                 href={`/course/${course.slug}/section/${section.slug}`}
                 className="font-bold text-gray-800"
               >
-                {section.section}
+                {section.name}
               </Link>
               <button
                 onClick={() => toggleSection(section.slug)}
                 className="p-1 text-black"
               >
                 {isOpen ? (
-                  <ChevronDown className="w-4 h-4" />
+                  <IoMdArrowDropdown className="w-4 h-4" />
                 ) : (
-                  <ChevronRight className="w-4 h-4" />
+                  <IoMdArrowDropright className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -123,7 +127,11 @@ const Sidebar = ({ course, activeSection, activeLesson, fullscreen }: any) => {
                           : "text-black hover:bg-gray-100"
                       }`}
                     >
-                      <SquarePlay className="w-5 h-5 font-extrabold pt-1" />
+                      {completedLessons.has(lesson.id) ? (
+                        <IoCheckbox className="w-5 h-5 font-extrabold pt-1" />
+                      ) : (
+                        <SquarePlay className="w-5 h-5 font-extrabold pt-1" />
+                      )}
                       <span>{lesson.title}</span>
                     </Link>
                   </li>

@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RolesTab from "@/components/admin/system-settings/RolesTab";
+import RatesTab from "@/components/admin/system-settings/RatesTab";
 import BrandingTab from "@/components/admin/system-settings/BrandingTab";
 import NotificationsTab from "@/components/admin/system-settings/NotificationsTab";
 
@@ -13,12 +14,17 @@ export default function SystemSettingsPage() {
       <Tabs defaultValue="roles">
         <TabsList className="mb-6">
           <TabsTrigger value="roles">Admin Roles</TabsTrigger>
+          <TabsTrigger value="rates">Exchange Rates</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         <TabsContent value="roles">
           <RolesTab />
+        </TabsContent>
+
+        <TabsContent value="rates">
+          <RatesTab />
         </TabsContent>
 
         <TabsContent value="branding">

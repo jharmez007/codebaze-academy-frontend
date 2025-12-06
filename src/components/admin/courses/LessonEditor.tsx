@@ -37,7 +37,7 @@ function mapBackendQuizToEditor(quiz: any) {
 
   let answer = "";
   if (type === "multiple_choice" && options.length > 0) {
-    const correctIdx = options.findIndex((opt) => opt.text === quiz.correct_answer);
+    const correctIdx = options.findIndex((opt: any) => opt.text === quiz.correct_answer);
     answer = correctIdx !== -1 ? options[correctIdx].id : "";
   } else if (type === "true_false" || type === "free_text") {
     answer = quiz.correct_answer;
@@ -61,7 +61,13 @@ export default function LessonEditor({
   onSave?: (updatedLesson: any) => void;
 }) {
   const [title, setTitle] = useState(lesson.title || "");
-  const [notesText, setNotesText] = useState(lesson.notes?.text || lesson.notes || "");
+  const [notesText, setNotesText] = useState(() => {
+  if (lesson.notes) {
+    if (typeof lesson.notes === "string") return lesson.notes;
+    if (typeof lesson.notes.text === "string") return lesson.notes.text;
+  }
+  return "";
+});
   const { id } = useParams();
 
   // Reference links
@@ -114,7 +120,7 @@ export default function LessonEditor({
 
   // Existing quizzes are initially collapsed, new quizzes are expanded
   const [collapsedQuizzes, setCollapsedQuizzes] = useState<boolean[]>(
-    quizzes.map((quiz) => typeof quiz.id === "number" ? true : false)
+    quizzes.map((quiz: any) => typeof quiz.id === "number" ? true : false)
   );
   const [quizLoading, setQuizLoading] = useState(false);
 
@@ -125,7 +131,7 @@ export default function LessonEditor({
   };
 
   const deleteQuiz = (index: number) => {
-    const updated = quizzes.filter((_, i) => i !== index);
+    const updated = quizzes.filter((_: any, i: any) => i !== index);
     setQuizzes(updated);
   };
 
@@ -188,7 +194,7 @@ export default function LessonEditor({
     }
     setQuizLoading(true);
 
-    let payload: any = {
+    const payload: any = {
       question: quiz.question,
       quiz_type: quiz.type,
       explanation: quiz.explanation,
@@ -244,7 +250,7 @@ export default function LessonEditor({
       try {
         const res = await deleteQuizService(quiz.id, lesson.id);
         if (res.status === 200 || res.status === 204) {
-          setQuizzes(prev => prev.filter((_, idx) => idx !== i));
+          setQuizzes((prev: any[]) => prev.filter((_: any, idx: any) => idx !== i));
           setCollapsedQuizzes(prev => prev.filter((_, idx) => idx !== i));
           toast.success("Quiz deleted!");
         } else {
@@ -254,7 +260,7 @@ export default function LessonEditor({
         toast.error("Error deleting quiz");
       }
     } else {
-      setQuizzes(prev => prev.filter((_, idx) => idx !== i));
+      setQuizzes((prev: any[]) => prev.filter((_: any, idx: any) => idx !== i));
       setCollapsedQuizzes(prev => prev.filter((_, idx) => idx !== i));
       toast.success("Quiz removed!");
     }
@@ -420,7 +426,7 @@ export default function LessonEditor({
             <p className="text-gray-500 text-sm">No quizzes added yet.</p>
           ) : (
             <div className="space-y-4">
-              {quizzes.map((quiz, i) =>
+              {quizzes.map((quiz: any, i: any) =>
                 collapsedQuizzes[i] ? (
                   <div
                     key={quiz.id}

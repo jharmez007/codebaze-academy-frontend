@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { changePassword } from "@/services/authService"; 
+
 
 interface EditPasswordProps {
   activeEdit: string | null;
@@ -10,6 +12,13 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState({
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+  apiError: "",
+});
+
   const formRef = useRef<HTMLDivElement | null>(null);
 
   // When edit opens, reset fields
@@ -40,6 +49,40 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
     if (!activeEdit) onEdit && onEdit("password");
   };
 
+  const validateForm = () => {
+  const newErrors = {
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+    apiError: "",
+  };
+
+  if (!currentPassword.trim()) {
+    newErrors.currentPassword = "Current password is required.";
+  }
+
+  if (newPassword.length < 6) {
+    newErrors.newPassword = "Password must be at least 6 characters.";
+  } else if (!/\d/.test(newPassword)) {
+    newErrors.newPassword = "Password must include at least one number.";
+  } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+    newErrors.newPassword = "Password must include a special character.";
+  }
+
+  if (confirmPassword !== newPassword) {
+    newErrors.confirmPassword = "Passwords do not match.";
+  }
+
+  setErrors(newErrors);
+
+  return (
+    !newErrors.currentPassword &&
+    !newErrors.newPassword &&
+    !newErrors.confirmPassword
+  );
+};
+
+
   const handleDiscard = (e?: React.MouseEvent) => {
     e?.preventDefault();
     setCurrentPassword("");
@@ -48,19 +91,48 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
     onEdit && onEdit(null);
   };
 
-  const isFormValid =
-    currentPassword.trim().length > 0 &&
-    newPassword.trim().length >= 6 &&
-    /\d/.test(newPassword) &&
-    /[!@#$%^&*(),.?":{}|<>]/.test(newPassword) &&
-    confirmPassword === newPassword;
+  const handleSave = async (e?: React.FormEvent) => {
+  e?.preventDefault();
 
-  const handleSave = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!isFormValid) return;
-    toast.success("Password updated");
-    onEdit && onEdit(null);
-  };
+  const isValid = validateForm();
+  if (!isValid) return;
+
+  try {
+    const response = await changePassword({
+      old_password: currentPassword,
+      new_password: newPassword,
+    });
+
+    if (response.status === 200) {
+      toast.success("Password updated");
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      setErrors({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+        apiError: "",
+      });
+
+      onEdit && onEdit(null);
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        apiError: response.message || "Failed to update password",
+      }));
+    }
+  } catch {
+    setErrors((prev) => ({
+      ...prev,
+      apiError: "Something went wrong. Please try again.",
+    }));
+  }
+};
+
+
 
   return (
     <div>
@@ -71,7 +143,7 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
           <div className="flex justify-between items-center">
             <div className="truncate mr-3">
               <span className="text-gray-400">
-                 {!currentPassword ? "Change your password" : " "}
+                 {!currentPassword ? "••••••••" : " "}
               </span>
               <div className='truncate text-wrap text-black text-xl'>{currentPassword ? "••••••••" : ""}</div>
             </div>
@@ -119,6 +191,11 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
 
             {/* Body */}
             <div className="px-6 py-5">
+              {errors.apiError && (
+                <div className="bg-red-50 border border-red-300 text-red-600 text-sm px-3 py-2 rounded mb-4">
+                  {errors.apiError}
+                </div>
+              )}
               <form onSubmit={handleSave}>
                 <div className="mb-3">
                   <label
@@ -131,11 +208,20 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
                     id="currentPassword"
                     type="password"
                     placeholder="••••••••"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                      errors.currentPassword
+                        ? "border-red-500 focus:ring-red-400"
+                        : "border-gray-300 focus:ring-gray-500"
+                    }`}
                     value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setCurrentPassword(e.target.value);
+                      setErrors((prev) => ({ ...prev, currentPassword: "" }));
+                    }}
                   />
+                  {errors.currentPassword && (
+                    <p className="text-red-500 text-xs mt-1">{errors.currentPassword}</p>
+                  )}
                 </div>
 
                 <div className="mb-3">
@@ -147,13 +233,22 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
                   </label>
                   <input
                     id="newPassword"
-                    type="password"
                     placeholder="••••••••"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    type="password"
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                      errors.newPassword
+                        ? "border-red-500 focus:ring-red-400"
+                        : "border-gray-300 focus:ring-gray-500"
+                    }`}
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setErrors((prev) => ({ ...prev, newPassword: "" }));
+                    }}
                   />
+                  {errors.newPassword && (
+                    <p className="text-red-500 text-xs mt-1">{errors.newPassword}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -165,13 +260,22 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
                   </label>
                   <input
                     id="confirmPassword"
-                    type="password"
                     placeholder="••••••••"
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    type="password"
+                    className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                      errors.confirmPassword
+                        ? "border-red-500 focus:ring-red-400"
+                        : "border-gray-300 focus:ring-gray-500"
+                    }`}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                    }}
                   />
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                  )}
                 </div>
 
                 <div className="flex justify-end flex-wrap gap-2">
@@ -183,13 +287,8 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
                     Discard
                   </button>
                   <button
-                    className={`cursor-pointer text-white rounded-md py-1.5 px-4 text-sm ${
-                      isFormValid
-                        ? "bg-[#06040E] border border-[#06040E]"
-                        : "bg-gray-300 border border-gray-300 pointer-events-none"
-                    }`}
-                    type="submit"
-                    disabled={!isFormValid}
+                   className="cursor-pointer text-white rounded-md py-1.5 px-4 text-sm bg-[#06040E] border border-[#06040E] hover:opacity-90"
+                   type="submit"
                   >
                     Save
                   </button>

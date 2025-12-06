@@ -34,6 +34,18 @@ export default function SignupForm() {
       newErrors.email = "Enter a valid email address";
     }
 
+    // Password validation: min 6 chars and mixture of lower & upper case
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else {
+      const pwd = form.password;
+      if (pwd.length < 6) {
+        newErrors.password = "Password must be at least 6 characters";
+      } else if (!/[a-z]/.test(pwd) || !/[A-Z]/.test(pwd)) {
+        newErrors.password = "Password must include both lower and upper case letters";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

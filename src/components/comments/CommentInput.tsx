@@ -1,6 +1,8 @@
 "use client";
+import React, { useState, useEffect } from "react";
 
-import React, { useState } from "react";
+import { getProfile } from "@/services/profileService";
+import { normalizeImagePath } from "@/utils/normalizeImagePath";
 
 interface CommentInputProps {
   value: string;
@@ -19,16 +21,26 @@ const CommentInput: React.FC<CommentInputProps> = ({
   onDiscard,
   placeholder = "Add a comment...",
   showButtons = false,
-  avatarUrl = "https://i.pravatar.cc/150?img=20", // fallback avatar
 }) => {
+  const [photo, setPhoto] = useState<string | undefined>(undefined);
   const [focused, setFocused] = useState(false);
   const inputPaddingRight = 140;
+
+  useEffect(() => {
+      async function loadProfile() {
+        const { data } = await getProfile();
+        if (data?.profile_photo) {
+          setPhoto(data.profile_photo);
+        }
+      }
+      loadProfile();
+    }, []);
 
   return (
     <div className="flex items-start gap-3 mt-2">
       {/* ✅ User Avatar */}
       <img
-        src={avatarUrl}
+        src={normalizeImagePath(photo)}
         alt="User Avatar"
         className="w-9 h-9 rounded-full object-cover mt-1"
       />

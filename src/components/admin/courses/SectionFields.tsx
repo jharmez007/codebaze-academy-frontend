@@ -92,7 +92,7 @@ export function SectionFields({ control, courseId }: SectionFieldsProps) {
           <Button
             type="button"
             variant="destructive"
-            onClick={() => handleRemove(section.id, sectionIndex)}
+            onClick={() => handleRemove((section as any)?.id, sectionIndex)}
           >
             Remove Section
           </Button>

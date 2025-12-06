@@ -144,6 +144,18 @@ export interface Course {
   is_published: boolean; // 1 = published, 0 = draft
 }
 
+export interface LessonDetail {
+  id: number;
+  title: string;
+  notes?: string;
+  document_url?: string;
+  video_url?: string;
+  reference_link?: any; 
+  created_at: string;
+  updated_at: string;
+}
+
+
 export async function getCourses(): Promise<{
   data?: Course[];
   status?: number;
@@ -272,12 +284,12 @@ export async function getCourseLessonById(
 export async function getLessonById(
   id: number
 ): Promise<{
-  data?: Course;
+  data?: LessonDetail;
   status?: number;
   message?: string;
 }> {
   try {
-    const response = await Api.get<Course>(`/courses/lessons/${id}`);
+    const response = await Api.get<LessonDetail>(`/courses/lessons/${id}`);
     return { data: response.data, status: response.status };
   } catch (error: any) {
     return {

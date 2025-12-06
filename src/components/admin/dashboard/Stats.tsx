@@ -1,7 +1,9 @@
-// src/components/admin/dashboard/Stats.tsx
+"use client";
+
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, DollarSign, Tag } from "lucide-react";
-import { statsData } from "@/data/adminDashboard";
+import { getAdminOverview } from "@/services/adminService"; 
 
 const icons: Record<string, any> = {
   Users,
@@ -11,9 +13,37 @@ const icons: Record<string, any> = {
 };
 
 export default function Stats() {
+  const [stats, setStats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const data = await getAdminOverview();
+        setStats(data.statsData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="h-24 animate-pulse bg-muted/40" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statsData.map(({ label, value, icon }) => {
+      {stats.map(({ label, value, icon }: any) => {
         const Icon = icons[icon];
         return (
           <Card key={label} className="shadow-sm">

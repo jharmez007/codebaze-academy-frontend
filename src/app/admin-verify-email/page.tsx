@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/lib/toast";
 import { verifyToken, sendVerificationOTP } from "@/services/authService";
 
-export default function VerifyEmailPage() {
+function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
@@ -42,9 +42,8 @@ export default function VerifyEmailPage() {
   };
 
   const handleResend = async () => {
-    let payload = { email };
     if (cooldown > 0) return;
-    const { status, message } = await sendVerificationOTP(payload);
+    const { status, message } = await sendVerificationOTP({ email });
     if (status && status >= 200 && status < 300) {
       successToast("New OTP sent to your email");
       setCooldown(60);
@@ -78,9 +77,7 @@ export default function VerifyEmailPage() {
 
         <div className="text-center">
           {cooldown > 0 ? (
-            <p className="text-sm text-gray-500">
-              Resend OTP in {cooldown}s
-            </p>
+            <p className="text-sm text-gray-500">Resend OTP in {cooldown}s</p>
           ) : (
             <button
               onClick={handleResend}
@@ -92,5 +89,20 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ⬅ Wrap the component in Suspense (fix useSearchParams)
+export default function VerifyEmailWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-[9999]">
+          <div className="w-10 h-10 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <VerifyEmailPage />
+    </Suspense>
   );
 }

@@ -56,7 +56,7 @@ export type Student = {
   email: string;
   courses: Course[];
   signupDate: string;
-  status: "active" | "suspended";
+  status: "activate" | "suspended";
   activity: Activity[];
 };
 
@@ -72,50 +72,51 @@ export default function StudentTable() {
 
   // 🔹 Load students on mount
   useEffect(() => {
-    async function fetchStudents() {
-      try {
-        setLoading(true);
-        const res = await getStudents();
-        if (res.data) {
-          const formatted = res.data.map((stu: any) => ({
-            id: stu.id,
-            name: stu.name,
-            email: stu.email,
-            courses:
-              typeof stu.courses === "string"
-                ? stu.courses.split(",").map((t: string) => ({ title: t.trim(), progress: 0 }))
-                : stu.courses,
-            signupDate: stu.date,
-            status: stu.is_suspended ? "suspended" : "active",
-            activity: [],
-          }));
-          setStudents(formatted);
-        } else {
-          toast.error(res.message || "Failed to load students");
-        }
-      } catch (err) {
-        toast.error("An unexpected error occurred while loading students");
-      } finally {
-        setLoading(false);
+  async function fetchStudents() {
+    try {
+      setLoading(true);
+      const res = await getStudents();
+      if (res.data && Array.isArray(res.data.students)) {
+        const formatted: Student[] = res.data.students.map((stu: any) => ({
+          id: stu.id,
+          name: stu.name,
+          email: stu.email,
+          courses: stu.course_titles.map((t: string) => ({
+            title: t,
+            progress: 0,
+          })),
+          signupDate: stu.date_joined,
+          status: stu.is_active ? "activate" : "suspended",
+          activity: [],
+        }));
+        setStudents(formatted);
+      } else {
+        toast.error(res.message || "Failed to load students");
       }
+    } catch (err) {
+      toast.error("An unexpected error occurred while loading students");
+    } finally {
+      setLoading(false);
     }
-    fetchStudents();
-  }, []);
+  }
+  fetchStudents();
+}, []);
+
 
   // 🔹 Suspend / Reactivate student
-  const handleSuspend = async (id: number, suspend: boolean, name: string) => {
+  const handleSuspend = async (id: number, action: string, name: string) => {
     try {
-      const res = await suspendStudent(id, suspend);
+      const res = await suspendStudent(id, action);
       if (res.status && res.status < 300) {
         toast.success(
-          suspend
+          action === "suspend"
             ? `${name} has been suspended`
             : `${name} has been reactivated`
         );
         setStudents((prev) =>
           prev.map((s) =>
             s.id === id
-              ? { ...s, status: suspend ? "suspended" : "active" }
+              ? { ...s, status: action === "suspend" ? "suspended" : "activate" }
               : s
           )
         );
@@ -234,69 +235,96 @@ export default function StudentTable() {
           </TableHeader>
 
           <TableBody>
-  {loading ? (
-    <TableRow>
-      <TableCell colSpan={6} className="text-center text-gray-500 py-10">
-        <div className="flex justify-center items-center gap-2">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          Loading students...
-        </div>
-      </TableCell>
-    </TableRow>
-  ) : students.length === 0 ? (
-    // 🧩 No students registered at all
-    <TableRow>
-      <TableCell colSpan={6} className="text-center text-gray-500 py-10">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <p className="text-base font-medium">No students registered yet</p>
-          <p className="text-sm text-muted-foreground">
-            Once students sign up, they’ll appear here.
-          </p>
-        </div>
-      </TableCell>
-    </TableRow>
-  ) : paginated.length === 0 ? (
-    // 🔎 No results for filters/search
-    <TableRow>
-      <TableCell colSpan={6} className="text-center text-gray-500 py-10">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <p className="text-base font-medium">No matching students found</p>
-          <p className="text-sm text-muted-foreground">
-            Try adjusting your search or filters.
-          </p>
-        </div>
-      </TableCell>
-    </TableRow>
-  ) : (
-    // ✅ Normal rendering
-    paginated.map((stu) => (
-      <TableRow key={stu.id}>
-        <TableCell className="font-medium">{stu.name}</TableCell>
-        <TableCell>{stu.email}</TableCell>
-        <TableCell>{stu.courses.map((c) => c.title).join(", ")}</TableCell>
-        <TableCell>
-          {new Date(stu.signupDate).toLocaleDateString()}
-        </TableCell>
-        <TableCell>
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              stu.status === "active"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {stu.status}
-          </span>
-        </TableCell>
-        <TableCell className="text-right">
-          {/* Actions */}
-          ...
-        </TableCell>
-      </TableRow>
-    ))
-  )}
-</TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-gray-500 py-10"
+                >
+                  <div className="flex justify-center items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Loading students...
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : paginated.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-gray-500">
+                  No students found
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginated.map((stu) => (
+                <TableRow key={stu.id}>
+                  <TableCell className="font-medium">{stu.name}</TableCell>
+                  <TableCell>{stu.email}</TableCell>
+                  <TableCell>
+                    {stu.courses.map((c) => c.title).join(", ")}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(stu.signupDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${
+                        stu.status === "activate"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {stu.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/students/${stu.id}`}>
+                            View Profile
+                          </Link>
+                        </DropdownMenuItem>
 
+                        {stu.status === "activate" ? (
+                          <ConfirmModal
+                            trigger={
+                              <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-gray-100 rounded-sm">
+                                Suspend
+                              </button>
+                            }
+                            title="Suspend Student"
+                            description={`Are you sure you want to suspend ${stu.name}?`}
+                            confirmLabel="Suspend"
+                            onConfirm={() =>
+                              handleSuspend(Number(stu.id), "suspend", stu.name)
+                            }
+                          />
+                        ) : (
+                          <ConfirmModal
+                            trigger={
+                              <button className="w-full text-left px-2 py-1.5 text-sm hover:bg-gray-100 rounded-sm">
+                                Reactivate
+                              </button>
+                            }
+                            title="Reactivate Student"
+                            description={`Are you sure you want to reactivate ${stu.name}?`}
+                            confirmLabel="Reactivate"
+                            onConfirm={() =>
+                              handleSuspend(Number(stu.id), "activate", stu.name)
+                            }
+                          />
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
         </Table>
       </div>
 

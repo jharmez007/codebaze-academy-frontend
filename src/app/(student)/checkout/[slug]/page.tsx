@@ -9,18 +9,10 @@ import { getCourses, getCourseById, Course } from "@/services/studentCourseServi
 import { enroll, enrollRequest } from "@/services/enrollmentService";
 import { login as loginService, verifyToken, forgotPassword } from "@/services/authService";
 import { initializePayment } from "@/services/paymentService";
+import { validatePromo } from "@/services/couponService";
+
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
 import { useAuth } from "@/context/AuthContext";
-import { useCurrency } from "@/hooks/useCurency";
-
-const CoursePrice = ({ price }: { price: number }) => {
-  const displayPrice = useCurrency(price);
-  return (
-    <>
-      {price === 0 ? "Free" : displayPrice}
-    </>
-  );
-};
 
 
 export default function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -40,7 +32,11 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
   const [verify, setVerify] = useState("");
   const [verifyError, setVerifyError] = useState("");
 
-  const { user, token, loading: authLoading, isAuthenticated, logout, login } = useAuth();
+  //Coupon states
+  const [code, setCode] = useState("");
+  const [discount, setDiscount] = useState<any>(null);
+
+  const { user, token, isAuthenticated, logout, login } = useAuth();
 
   const router = useRouter();
 
@@ -50,7 +46,9 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
 
       try {
         // 1️⃣ Get all courses
-        const { data: allCourses } = await getCourses();
+        const { data: allCourses } = await getCourses({
+        headers: { "X-Dev-IP": "197.211.53.241" },
+      });
 
         // 2️⃣ Find the course by slug
         const matchedCourse = allCourses?.find((c) => c.slug === slug);
@@ -59,7 +57,9 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
         }
 
         // 3️⃣ Fetch full details by ID
-        const { data: fullCourse } = await getCourseById(matchedCourse.id);
+        const { data: fullCourse } = await getCourseById(matchedCourse.id, {
+        headers: { "X-Dev-IP": "197.211.53.241" },
+      });
         setCourse(fullCourse || matchedCourse);
       } catch (err) {
         console.error("Error loading course:", err);
@@ -74,6 +74,7 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
 
     fetchCourse();
   }, [slug]);
+
 
     // Early loading skeleton
   if (loading) {
@@ -180,17 +181,17 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-        const { data, status, message } = await loginService({
-          email,
-          password,
-        });
-  
-        if (status && status >= 200 && status < 300 && data) {
-          login(data.user, data.access_token);
+      const { data, status, message } = await loginService({
+        email,
+        password,
+      });
+      
+      if (status && status >= 200 && status < 300 && data) {
+        login(data.user, data.access_token);
+        window.location.reload();
           
           localStorage.setItem("refresh_token", data.refresh_token);
           setLoginError("");
-  
           successToast("Login successful!");
         } else {
           errorToast(message || "Invalid credentials");
@@ -214,19 +215,20 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
 
   const handleVerifySubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-
+  
   try {
     const result = await verifyToken({
       email,
       token: verify, // or token: verify depending on your API
     });
-
+    
     if (result.status === 200 || result.status === 201) {
       if (!result.user || !result.access_token) {
-      setVerifyError("Verification failed. No user or token returned.");
-      return;
-    }
-
+        setVerifyError("Verification failed. No user or token returned.");
+        return;
+      }
+      
+    window.location.reload();
     setShowVerify(false);
     setVerifyError("");
 
@@ -250,32 +252,19 @@ const handleEnroll = async () => {
 
   const payload = {
     email: user?.email,
-    amount: course.price, 
-    redirect_url: `${window.location.origin}/products`, 
+    amount: course.price,
+    coupon_code: code,
   };
 
   try {
-    if (course.price > 0) {
-      // Paid course → initialize payment
-      const paymentResult = await initializePayment(course.id.toString(), payload, {
-        headers: { Authorization: `Bearer ${token!}` },
-      });
-
-      if (paymentResult.status === 200 && paymentResult.authorization_url) {
-        // Redirect user to payment page
-        router.push(paymentResult.authorization_url);
-      } else {
-        errorToast(`Payment initialization failed: ${paymentResult.message || "Unknown error"}`);
-      }
-    } else {
-      // Free course → enroll directly
+    // CASE 1: Free course or already paid → enroll directly
+    if (course.price === 0 || course.is_paid) {
       const result = await enroll(course.id, payload, {
         headers: { Authorization: `Bearer ${token!}` },
       });
 
       if (result.status === 200 || result.status === 201) {
         successToast(`Enrolled in ${course.title}!`);
-
         if (result.full_name === "Guest User" && result.has_password === false) {
           router.push(`/create-account/${course.slug}`);
         } else {
@@ -284,11 +273,24 @@ const handleEnroll = async () => {
       } else {
         errorToast(`Enrollment failed: ${result.message || "Unknown error"}`);
       }
+    } 
+    // CASE 2: Paid course and not yet paid → initialize payment
+    else {
+      const paymentResult = await initializePayment(course.id.toString(), payload, {
+        headers: { Authorization: `Bearer ${token!}`},
+      });
+
+      if (paymentResult.status === 200 && paymentResult.authorization_url) {
+        router.push(paymentResult.authorization_url);
+      } else {
+        errorToast(`Payment initialization failed: ${paymentResult.message || "Unknown error"}`);
+      }
     }
   } catch (error) {
     errorToast(`Something went wrong: ${(error as Error).message}`);
   }
 };
+
 
 
 
@@ -305,7 +307,6 @@ const handleResetPassword = async () => {
       successToast
       
       
-      
       ("Password reset link sent to your email.");
     } else {
       errorToast(result.message || "Failed to send reset link.");
@@ -314,6 +315,29 @@ const handleResetPassword = async () => {
     errorToast("An unexpected error occurred. Please try again.");
   }
 };
+
+const handleApply = async () => {
+    if (!code.trim()) {
+      errorToast("Please enter a discount code");
+      return;
+    }
+
+    const { data, message, status } = await validatePromo({
+      course_id: course.id,
+      code,
+    }, {
+        headers: { "X-Dev-IP": "197.211.53.241" },
+      }
+    );
+
+    if (status === 200) {
+      setDiscount(data);
+      successToast(data?.message || "Coupon applied successfully!");
+    } else {
+      errorToast(message || "Invalid or expired coupon");
+      setDiscount(null);
+    }
+  };
 
 const handleLogout = () => {
     logout();
@@ -497,22 +521,35 @@ const handleLogout = () => {
             <div>
               <p className="text-sm font-medium text-gray-700">Course</p>
               <p className="font-semibold text-gray-900">{course.title}</p>
-              <p className="text-sm text-gray-600"><CoursePrice price={course.price} /></p>
+              <p className="text-sm text-gray-600">
+                {course.price === 0
+                  ? "Free"
+                  : `${course.currency === "USD" ? "$" : "₦"}${course.price.toLocaleString()}`}
+              </p>
             </div>
           </div>
 
-         {course.price > 0 && (() => {
-            return (
+         {(course.price > 0 && !course.is_paid) && (
               <>
                 {/* Discount */}
                 <div className="flex gap-2 mb-4">
                   <input
                     type="text"
                     placeholder="Discount code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
                     className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
                   />
-                  <button className="px-4 py-2 text-gray-500 border text-sm border-gray-300 rounded-md hover:bg-gray-200 transition cursor-pointer">
-                    Apply
+                  <button
+                    onClick={handleApply}
+                    disabled={loading}
+                    className={`px-4 py-2 text-sm border rounded-md transition cursor-pointer ${
+                      loading
+                        ? "text-gray-400 bg-gray-100"
+                        : "text-gray-500 border-gray-300 hover:bg-gray-200"
+                    }`}
+                  >
+                    {loading ? "Checking..." : "Apply"}
                   </button>
                 </div>
 
@@ -520,11 +557,27 @@ const handleLogout = () => {
                 <div className="border-t border-gray-300 pt-4 space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span><CoursePrice price={course.price} /></span>
+                    <span>
+                      {course.price === 0
+                        ? 0
+                        : `${course.currency === "USD" ? "$" : "₦"}${(discount ? discount.original_price.toLocaleString() : course.price.toLocaleString())}`}
+                    </span> 
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total</span>
-                    <span><CoursePrice price={course.price} /></span>
+
+                  {discount && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="text-gray-600">Discount ({discount.code})</span>
+                      <span>-{`${course.currency === "USD" ? "$" : "₦"}${discount.discount}`}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-gray-800">Total</span>
+                    <span>
+                       {course.price === 0
+                        ? 0
+                        : `${course.currency === "USD" ? "$" : "₦"}${(discount ? discount.final_price.toLocaleString() : course.price.toLocaleString())}`}
+                    </span>
                   </div>
                 </div>
 
@@ -532,38 +585,57 @@ const handleLogout = () => {
                 <div className="mt-4 flex justify-between items-center text-sm font-semibold">
                   <span>Due now</span>
                   <span className="text-gray-900">
-                    <span className="bg-gray-200 font-extralight p-1 rounded-md">NGN</span>{" "}
-                    <CoursePrice price={course.price} />
+                     <span className="bg-gray-200 font-extralight p-1 rounded-md mr-1">
+                      {course?.currency}
+                    </span>
+                   {course.price === 0
+                        ? 0
+                        : `${course.currency === "USD" ? "$" : "₦"}${(discount ? discount.final_price.toLocaleString() : course.price.toLocaleString())}`}
                   </span>
                 </div>
               </>
-            );
-          })()}
+            )}
 
 
-          {/* Pay Button */}
-          {(isAuthenticated ) ? (
+          {/* Pay / Enroll Button */}
+          {isAuthenticated ? (
             <button
-              onClick={handleEnroll}
-              className="w-full mt-4 py-3 font-medium rounded-md bg-gray-400 text-white hover:bg-gray-500 transition cursor-pointer"
+              onClick={!course.is_enrolled ? handleEnroll : undefined}
+              disabled={course.is_enrolled}
+              className={`w-full mt-4 py-3 font-medium rounded-md text-white transition cursor-pointer ${
+                course.is_enrolled
+                  ? "bg-gray-300" // Already enrolled
+                  : course.price === 0 || course.is_paid
+                  ? "bg-green-600 hover:bg-green-700" // Free or paid → Enroll
+                  : "bg-gray-400 hover:bg-gray-500" // Not paid → Get now
+              }`}
             >
-              Get now
+              {course.is_enrolled
+                ? "Enrolled"
+                : course.price === 0 || course.is_paid
+                ? "Enroll"
+                : "Get now"}
             </button>
           ) : (
             <button
               className="w-full mt-4 py-3 font-medium rounded-md bg-gray-300 text-gray-500"
-              tabIndex={-1}
               title="Please log in to continue"
-              onClick={e => e.preventDefault()}
+              onClick={(e) => e.preventDefault()}
               type="button"
             >
               Get now
             </button>
           )}
 
-          {/* Terms */}
+
+
+         {/* Terms */}
           <p className="mt-3 text-xs text-gray-500">
-            By clicking "Get now" you agree to the{" "}
+            By clicking{" "}
+            <span className="font-medium">
+              "{course.price === 0 || course.is_paid ? "Enroll" : "Get now"}"
+            </span>{" "}
+            you agree to the{" "}
             <a href="/terms" className="underline hover:text-gray-700">
               Terms of Service
             </a>{" "}

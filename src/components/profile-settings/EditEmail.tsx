@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { changeEmail, verifyNewEmail } from "@/services/authService";
+import { getProfile } from "@/services/profileService";
 
 interface EditEmailProps {
   activeEdit: string | null;
@@ -11,14 +13,28 @@ interface EditEmailProps {
 const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
   const [savedEmail, setSavedEmail] = useState("");
   const [email, setEmail] = useState(savedEmail);
+
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  // When edit mode activates, preload saved email
+  useEffect(() => {
+      async function loadProfile() {
+        const result = await getProfile();
+        if (result.data) {
+          setSavedEmail(result.data.email ?? "");
+        }
+      }
+      loadProfile();
+    }, []);
+
+  // preload email
   useEffect(() => {
     if (activeEdit === "email") setEmail(savedEmail);
   }, [activeEdit, savedEmail]);
 
-  // Close form on outside click
+  // close on click outside
   useEffect(() => {
     if (activeEdit !== "email") return;
     const handleOutside = (e: PointerEvent) => {
@@ -41,17 +57,46 @@ const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
     onEdit(null);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) return;
-    setSavedEmail(email.trim());
-    toast.success("Email updated");
-    onEdit(null);
+
+    toast.loading("Sending verification code...");
+
+    const res = await changeEmail(email.trim());
+
+    toast.dismiss();
+
+    if (res?.status === 200) {
+      toast.success("Verification code sent!");
+      setShowVerification(true);
+    } else {
+      toast.error(res?.message || "Could not update email");
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!verificationCode.trim()) return;
+
+    toast.loading("Verifying...");
+
+    const res = await verifyNewEmail(email.trim(), verificationCode.trim());
+
+    toast.dismiss();
+
+    if (res?.status === 200) {
+      toast.success("Email updated successfully!");
+      setSavedEmail(email.trim());
+      setShowVerification(false);
+      onEdit(null);
+    } else {
+      toast.error(res?.message || "Invalid verification code");
+    }
   };
 
   return (
     <div>
-      {/* Display state */}
+      {/* Display mode */}
       {activeEdit !== "email" && (
         <div className="text-sm max-sm:px-6">
           <div className="block md:hidden font-semibold">Email</div>
@@ -60,8 +105,9 @@ const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
               <span className="text-gray-400">
                 {!savedEmail ? "Change your email" : " "}
               </span>
-              <div className='truncate text-wrap'>{savedEmail}</div>
+              <div className="truncate">{savedEmail}</div>
             </div>
+
             <div
               onClick={openEdit}
               role="button"
@@ -71,18 +117,16 @@ const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
                   ? "opacity-40 pointer-events-none"
                   : "hover:bg-gray-300"
               }`}
-              onKeyDown={(e) => {
-                if (!activeEdit && (e.key === "Enter")) openEdit();
-              }}
+              onKeyDown={(e) => e.key === "Enter" && !activeEdit && openEdit()}
             >
-              <span>Edit</span>
+              Edit
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Form */}
-      {activeEdit === "email" && (
+      {/* Edit form */}
+      {activeEdit === "email" && !showVerification && (
         <>
           <div
             className="fixed inset-0 bg-transparent z-40"
@@ -93,22 +137,16 @@ const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
             ref={formRef}
             className="edit-form z-50 relative flex flex-col bg-white border border-gray-300 rounded-md text-sm"
           >
-            {/* Header */}
             <div className="px-6 pt-5">
               <div className="font-semibold text-base">Email</div>
               <p className="text-gray-500 mt-1 text-[13px]">
-                Your email is only shared with the creator for sending important
-                emails and notifications. You can change your email notification
-                settings separately.
+                Your email is only shared with the creator for important
+                notifications.
               </p>
             </div>
 
-            {/* Body */}
             <div className="px-6 py-5">
               <form onSubmit={handleSave}>
-                <label htmlFor="email" className="sr-only">
-                  Email
-                </label>
                 <input
                   id="email"
                   type="email"
@@ -119,22 +157,21 @@ const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
                   required
                 />
 
-                {/* Footer buttons */}
                 <div className="flex justify-end gap-2 mt-4">
                   <button
                     type="button"
                     onClick={handleDiscard}
-                    className="cursor-pointer text-[#717073] border border-gray-300 rounded-md py-1.5 px-4 text-sm hover:bg-gray-100 transition ease-in"
+                    className="text-[#717073] border border-gray-300 rounded-md py-1.5 px-4 text-sm hover:bg-gray-100"
                   >
                     Discard
                   </button>
                   <button
                     type="submit"
                     disabled={!isValid}
-                    className={`cursor-pointer text-white rounded-md py-1.5 px-4 text-sm ${
+                    className={`text-white rounded-md py-1.5 px-4 text-sm ${
                       isValid
-                        ? "bg-[#06040E] border border-[#06040E]"
-                        : "bg-gray-300 border border-gray-300 pointer-events-none"
+                        ? "bg-[#06040E]"
+                        : "bg-gray-300 pointer-events-none"
                     }`}
                   >
                     Save
@@ -144,6 +181,45 @@ const EditEmail: React.FC<EditEmailProps> = ({ activeEdit, onEdit }) => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Verification modal */}
+      {showVerification && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-lg">
+            <h2 className="text-lg font-semibold">Verify New Email</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Enter the 6-digit verification code sent to:
+            </p>
+            <p className="font-medium mt-1">{email}</p>
+
+            <input
+              type="text"
+              maxLength={6}
+              placeholder="Verification code"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              className="mt-4 w-full border border-gray-300 rounded-md px-3 py-2"
+            />
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                className="px-4 py-2 text-sm border rounded-md"
+                onClick={() => setShowVerification(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-2 text-sm bg-black text-white rounded-md"
+                onClick={handleVerify}
+                disabled={!verificationCode.trim()}
+              >
+                Verify
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

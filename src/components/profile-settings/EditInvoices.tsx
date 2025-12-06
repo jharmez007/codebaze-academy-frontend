@@ -1,34 +1,78 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { CircleCheck, Download } from "lucide-react"
+import React, { useEffect, useRef, useState } from 'react';
+import { CircleCheck, Clock, XCircle, Download } from "lucide-react";
+import { toast } from "sonner";
+
+import { listPayments, downloadInvoice } from "@/services/profileService";
+
+const getStatusClasses = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "successful":
+      return "bg-green-50 text-green-700 border border-green-200";
+    case "pending":
+      return "bg-yellow-50 text-yellow-700 border border-yellow-200";
+    case "failed":
+      return "bg-red-50 text-red-700 border border-red-200";
+    default:
+      return "bg-gray-100 text-gray-600 border border-gray-300";
+  }
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "successful":
+      return <CircleCheck className="w-4 h-4" />;
+    case "pending":
+      return <Clock className="w-4 h-4" />;
+    case "failed":
+      return <XCircle className="w-4 h-4" />;
+    default:
+      return <Clock className="w-4 h-4" />;
+  }
+};
+
+
 
 interface EditInvoicesProps {
   activeEdit: string | null;
   onEdit: (key: string | null) => void;
 }
 
-const EditInvoices: React.FC<EditInvoicesProps> = ({
-  activeEdit,
-  onEdit,
-}) => {
+const EditInvoices: React.FC<EditInvoicesProps> = ({ activeEdit, onEdit }) => {
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  // Simulated invoice data (can later come from props or API)
-  const [invoice] = useState({
-    date: 'Today',
-    item: 'Frontend Foundations',
-    status: 'Paid',
-    amount: '$0.00',
-  });
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  
+
+  // Fetch invoices when opened
+  useEffect(() => {
+    if (activeEdit !== "invoices") return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      const result = await listPayments();
+
+      if (result.data) {
+        setInvoices(result.data);
+      } else {
+        setError(result.message || "Unable to load invoices");
+      }
+
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [activeEdit]);
 
   // Close when clicking outside
   useEffect(() => {
     if (activeEdit !== 'invoices') return;
 
     const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null;
       if (!formRef.current) return;
-      if (target && !formRef.current.contains(target)) {
-        onEdit && onEdit(null);
+      if (!formRef.current.contains(e.target as Node)) {
+        onEdit(null);
       }
     };
 
@@ -37,11 +81,27 @@ const EditInvoices: React.FC<EditInvoicesProps> = ({
   }, [activeEdit, onEdit]);
 
   const openEdit = () => {
-    if (!activeEdit) onEdit && onEdit('invoices');
+    if (!activeEdit) onEdit('invoices');
   };
 
   const handleDismiss = () => {
-    onEdit && onEdit(null);
+    onEdit(null);
+  };
+
+  const handleDownload = async (id: number) => {
+    const result = await downloadInvoice(id);
+
+    if (!result.data) {
+      toast.info(result.message || "Unable to download invoice");
+      return;
+    }
+
+    const url = window.URL.createObjectURL(new Blob([result.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "invoice.pdf";
+    link.click();
+    link.remove();
   };
 
   return (
@@ -61,10 +121,6 @@ const EditInvoices: React.FC<EditInvoicesProps> = ({
                 ${activeEdit ? 'opacity-40 pointer-events-none' : 'hover:bg-gray-300'}`}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => {
-                if (!activeEdit && (e.key === 'Enter' || e.key === ' ')) openEdit();
-              }}
-              aria-disabled={!!activeEdit}
             >
               <span className={activeEdit ? 'text-gray-500' : ''}>View</span>
             </div>
@@ -78,8 +134,7 @@ const EditInvoices: React.FC<EditInvoicesProps> = ({
           {/* overlay disables all interaction/hover outside */}
           <div
             className="fixed inset-0 bg-transparent z-40"
-            onMouseDown={() => onEdit && onEdit(null)}
-            aria-hidden
+            onMouseDown={() => onEdit(null)}
           />
 
           <div
@@ -91,65 +146,87 @@ const EditInvoices: React.FC<EditInvoicesProps> = ({
               <div className="font-semibold mb-2">Invoices</div>
             </div>
 
-            {/* Table-like content */}
             <div className="px-4 sm:px-6 pb-5 overflow-x-auto">
-              {/* container allows horizontal scroll on very small screens but adapts to stacked cards */}
-              <div className="w-full">
-                {/* Grid header for md+ screens */}
-                <div className="hidden md:grid grid-cols-5 font-semibold text-gray-500 text-sm border-b border-gray-200 px-4 py-2">
-                  <div>Date</div>
-                  <div>Items</div>
-                  <div>Status</div>
-                  <div>Amount</div>
-                  <div />
-                </div>
+              {/* Loading */}
+              {loading && (
+                <p className="text-center py-4 text-gray-500">Loading invoices...</p>
+              )}
 
-                {/* Single invoice - responsive: stacked on small, row on md+ */}
-                <div className="bg-white border border-gray-200 rounded-md mt-3 p-4 md:p-0">
-                  <div className="grid md:grid-cols-5 gap-3 items-center px-0 md:px-4 py-3">
-                    {/* Date */}
-                    <div className="text-sm text-gray-600 md:py-0">
-                      <div className="md:hidden text-xs text-gray-500 mb-1">Date</div>
-                      {invoice.date}
-                    </div>
+              {/* Error */}
+              {error && (
+                <p className="text-center py-4 text-red-500">{error}</p>
+              )}
 
-                    {/* Item */}
-                    <div className="text-sm md:font-medium text-gray-800 md:py-0">
-                      <div className="md:hidden text-xs text-gray-500 mb-1">Items</div>
-                      {invoice.item}
-                    </div>
+              {/* No invoices */}
+              {!loading && invoices.length === 0 && !error && (
+                <p className="text-center py-4 text-gray-500">No invoices found.</p>
+              )}
 
-                    {/* Status */}
-                    <div className="md:py-0">
-                      <div className="md:hidden text-xs text-gray-500 mb-1">Status</div>
-                      <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-medium px-2 py-1 rounded-full border border-green-200">
-                        <CircleCheck className='w-4 h-4' />
-                        {invoice.status}
-                      </span>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="text-sm md:font-medium text-gray-800 md:py-0">
-                      <div className="md:hidden text-xs text-gray-500 mb-1">Amount</div>
-                      {invoice.amount}
-                    </div>
-
-                    {/* Actions: full width on small, right aligned on md+ */}
-                    <div className="flex justify-end md:justify-end">
-                      <button
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium rounded-md py-2 px-3 hover:bg-gray-100 transition w-full md:w-auto"
-                        onClick={() => console.log('Download PDF')}
-                      >
-                        <Download className='w-4 h-4' />
-                        <span>PDF</span>
-                      </button>
-                    </div>
+              {/* Invoices list */}
+              {invoices.length > 0 && (
+                <div className="w-full">
+                  {/* Header */}
+                  <div className="hidden md:grid grid-cols-5 font-semibold text-gray-500 text-sm border-b border-gray-200 px-4 py-2">
+                    <div>Date</div>
+                    <div>Items</div>
+                    <div>Status</div>
+                    <div>Amount</div>
+                    <div />
                   </div>
-                </div>
-              </div>
 
-              {/* Dismiss button */}
-              <div className="flex justify-end mt-4 px-0 sm:px-0">
+                  {invoices.map((inv: any) => (
+                    <div
+                      key={inv.id}
+                      className="bg-white border border-gray-200 rounded-md mt-3 p-4 md:p-0"
+                    >
+                      <div className="grid md:grid-cols-5 gap-3 items-center px-0 md:px-4 py-3">
+                        {/* Date */}
+                        <div className="text-sm text-gray-600">
+                          <div className="md:hidden text-xs text-gray-500 mb-1">Date</div>
+                          {new Date(inv.date).toLocaleDateString()}
+                        </div>
+
+                        {/* Item */}
+                        <div className="text-sm md:font-medium text-gray-800">
+                          <div className="md:hidden text-xs text-gray-500 mb-1">Items</div>
+                          {inv.course}
+                        </div>
+
+                        {/* Status */}
+                        <div>
+                          <div className="md:hidden text-xs text-gray-500 mb-1">Status</div>
+                          <span
+                            className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${getStatusClasses(inv.status)}`}
+                          >
+                            {getStatusIcon(inv.status)}
+                            {inv.status}
+                          </span>
+                        </div>
+
+                        {/* Amount */}
+                        <div className="text-sm md:font-medium text-gray-800">
+                          <div className="md:hidden text-xs text-gray-500 mb-1">Amount</div>
+                          {`₦${Number(inv.amount).toLocaleString()}`}
+                        </div>
+
+                        {/* Download */}
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleDownload(inv.id)}
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm font-medium rounded-md py-2 px-3 hover:bg-gray-100 transition"
+                          >
+                            <Download className='w-4 h-4' />
+                            <span>PDF</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Dismiss */}
+              <div className="flex justify-end mt-4">
                 <button
                   onClick={handleDismiss}
                   className="cursor-pointer text-gray-700 border border-gray-300 rounded-md py-1 px-3 text-sm hover:bg-gray-200 transition ease-in"

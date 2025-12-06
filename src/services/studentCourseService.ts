@@ -18,6 +18,7 @@ export interface Subcategory {
 export interface Course {
   id: number;
   created_at: string;
+  currency: string;
   slug: string;
   title: string;
   price: number;
@@ -27,15 +28,19 @@ export interface Course {
   sections: Subcategory[];
   image?: File | null;
   is_published: boolean; 
+  is_paid: boolean;
+  is_enrolled?: boolean;
 }
 
-export async function getCourses(): Promise<{
+export async function getCourses(
+  config?: { headers: Record<string, string> }
+): Promise<{
   data?: Course[];
   status?: number;
   message?: string;
 }> {
   try {
-    const response = await Api.get<Course[]>("/courses/");
+    const response = await Api.get<Course[]>("/courses/", config);
     return { data: response.data, status: response.status };
   } catch (error: any) {
     return {
@@ -47,16 +52,36 @@ export async function getCourses(): Promise<{
   }
 }
 
+export async function getCurrency(
+  config?: { headers: Record<string, string> }
+): Promise<{
+  data?: Course[];
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.get<Course[]>("/admin/debug/currency", config);
+    return { data: response.data, status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
+    };
+  }
+}
 
 export async function getCourseById(
-  id: number
+  id: number,
+  config?: { headers: Record<string, string> },
 ): Promise<{
   data?: Course;
   status?: number;
   message?: string;
 }> {
   try {
-    const response = await Api.get<Course>(`/courses/${id}`);
+    const response = await Api.get<Course>(`/courses/${id}`, config);
     return { data: response.data, status: response.status };
   } catch (error: any) {
     return {
@@ -67,3 +92,4 @@ export async function getCourseById(
     };
   }
 }
+

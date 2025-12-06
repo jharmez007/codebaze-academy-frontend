@@ -1,4 +1,13 @@
-import { CommentType } from "@/data/comments";
+export interface CommentType {
+  id: number;
+  author: string;
+  text: string;
+  timestamp: string;
+  avatar?: string;
+  reactions: Record<string, number>;
+  reactedByUser: Record<string, boolean>;
+  replies: CommentType[];
+}
 
 export const addReplyRecursive = (
   arr: CommentType[],

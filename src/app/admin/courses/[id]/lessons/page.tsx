@@ -16,30 +16,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Video, FileText, ListChecks } from "lucide-react";
 
-// Utility functions
-function formatDuration(duration: number | string) {
-  // If duration is in seconds, convert to mm:ss
-  const num = Number(duration);
-  if (isNaN(num)) return duration;
-  const mins = Math.floor(num / 60);
-  const secs = num % 60;
-  return `${mins}m ${secs}s`;
+/** ✅ Converts seconds to minutes (rounded up) */
+function formatDuration(seconds: number | string): string {
+  const sec = typeof seconds === "string" ? parseInt(seconds) : seconds;
+  if (isNaN(sec) || sec <= 0) return "";
+  const minutes = Math.ceil(sec / 60);
+  return `${minutes} min${minutes > 1 ? "s" : ""}`;
 }
 
-function formatSize(size: number | string) {
-  // If size is in bytes, convert to MB/GB
-  const num = Number(size);
-  if (isNaN(num)) return size;
-  if (num >= 1024 * 1024 * 1024) {
-    return `${(num / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-  }
-  if (num >= 1024 * 1024) {
-    return `${(num / (1024 * 1024)).toFixed(2)} MB`;
-  }
-  if (num >= 1024) {
-    return `${(num / 1024).toFixed(2)} KB`;
-  }
-  return `${num} B`;
+/** ✅ Converts bytes to MB (rounded to the nearest whole number) */
+function formatSize(bytes: number | string): string {
+  const b = typeof bytes === "string" ? parseFloat(bytes) : bytes;
+  if (isNaN(b) || b <= 0) return "";
+  const mb = b / (1024 * 1024);
+  return `${Math.round(mb)} MB`;
 }
 
 export default function LessonsPage() {

@@ -1,17 +1,51 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { mockComments, CommentType } from "@/data/comments";
+import React, { useMemo, useState, useEffect } from "react";
 import ConfirmModal from "./ConfirmModal";
 import Comment from "./Comment";
 import CommentInput from "./CommentInput";
-import { addReplyRecursive, editRecursive, deleteRecursive, reactRecursive } from "./helpers";
 
-const CommentsSection: React.FC = () => {
+import {
+  addReplyRecursive,
+  editRecursive,
+  deleteRecursive,
+  reactRecursive,
+} from "./helpers";
+
+import { getProfile } from "@/services/profileService";
+import {
+  addComment,
+  getComments,
+  reactToComment,
+  editComment,
+  deleteComment,
+  reportComment,
+} from "@/services/commentService";
+
+export interface CommentType {
+  id: number;
+  author: string;
+  text: string;
+  timestamp: string;
+  avatar?: string;
+  reactions: Record<string, number>;
+  reactedByUser: Record<string, boolean>;
+  replies: CommentType[];
+}
+
+const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
   const currentUser = "You";
-  const [comments, setComments] = useState<CommentType[]>(mockComments);
+
+  const [photo, setPhoto] = useState<string | undefined>(undefined);
+  const [comments, setComments] = useState<CommentType[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
-  const [confirmModal, setConfirmModal] = useState<{ open: boolean; action: "delete" | "report"; id: number | null; }>({
+
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    action: "delete" | "report";
+    id: number | null;
+  }>({
     open: false,
     action: "delete",
     id: null,
@@ -19,34 +53,145 @@ const CommentsSection: React.FC = () => {
 
   const INITIAL = 3;
   const LOAD_MORE_STEP = 5;
-  const [visibleCount, setVisibleCount] = useState<number>(INITIAL);
-  const visibleComments = useMemo(() => comments.slice(0, visibleCount), [comments, visibleCount]);
+  const [visibleCount, setVisibleCount] = useState(INITIAL);
+  const visibleComments = useMemo(
+    () => comments.slice(0, visibleCount),
+    [comments, visibleCount]
+  );
 
-  const handleAddComment = (text: string, parentId?: number) => {
-    const comment: CommentType = {
-      id: Date.now(),
+  // ------------------------------------------------------------
+  // Fetch profile photo
+  // ------------------------------------------------------------
+  useEffect(() => {
+    async function loadProfile() {
+      const { data } = await getProfile();
+      if (data?.profile_photo) setPhoto(data.profile_photo);
+    }
+    loadProfile();
+  }, []);
+
+  // ------------------------------------------------------------
+  // Fetch comments
+  // ------------------------------------------------------------
+  useEffect(() => {
+    const fetchComments = async () => {
+      setLoading(true);
+      const res = await getComments(courseId);
+
+      if (res.data) {
+        const mapped = res.data.map((c: any) => ({
+          id: c.id,
+          author: c.author,
+          text: c.text,
+          timestamp: c.timestamp,
+          avatar: c.avatar,
+          reactions: c.reactions || {},
+          reactedByUser: c.reactedByUser || {},
+          replies:
+            c.replies?.map((r: any) => ({
+              id: r.id,
+              author: r.author,
+              text: r.text,
+              timestamp: r.timestamp,
+              avatar: r.avatar,
+              reactions: r.reactions || {},
+              reactedByUser: r.reactedByUser || {},
+              replies: r.replies || [],
+            })) || [],
+        }));
+
+        setComments(mapped);
+      } else {
+        setComments([]);
+      }
+
+      setLoading(false);
+    };
+
+    fetchComments();
+  }, [courseId]);
+
+  // ------------------------------------------------------------
+  // Add new comment / reply
+  // ------------------------------------------------------------
+  const handleAddComment = async (text: string, parentId?: number) => {
+    const tempId = Date.now();
+    const newC: CommentType = {
+      id: tempId,
       author: currentUser,
       text,
-      timestamp: "Just now",
-      avatar: "https://i.pravatar.cc/150?img=20",
+      timestamp: new Date().toISOString(),
+      avatar: photo,
       reactions: {},
       reactedByUser: {},
       replies: [],
     };
-    if (!parentId) setComments((prev) => [comment, ...prev]);
-    else setComments((prev) => addReplyRecursive(prev, parentId, comment));
+
+    // Optimistic update
+    if (!parentId) {
+      setComments((prev) => [newC, ...prev]);
+    } else {
+      setComments((prev) => addReplyRecursive(prev, parentId, newC));
+    }
+
+    const res = await addComment({
+      course_id: courseId,
+      content: text,
+      parent_id: parentId || null,
+    });
+
+    if (res.data?.id) {
+      setComments((prev) =>
+        prev.map((c) => (c.id === tempId ? { ...c, id: res.data.id } : c))
+      );
+    }
   };
 
-  const handleEdit = (id: number, text: string) => setComments((prev) => editRecursive(prev, id, text));
-  const handleDeleteConfirm = (id: number) => {
+  // ------------------------------------------------------------
+  // Edit comment
+  // ------------------------------------------------------------
+  const handleEdit = async (id: number, text: string) => {
+    // optimistic
+    setComments((prev) => editRecursive(prev, id, text));
+
+    await editComment(id, text);
+  };
+
+  // ------------------------------------------------------------
+  // Delete comment
+  // ------------------------------------------------------------
+  const handleDeleteConfirm = async (id: number) => {
+    // optimistic UI
     setComments((prev) => deleteRecursive(prev, id));
+
+    await deleteComment(id);
+
     setConfirmModal({ open: false, action: "delete", id: null });
   };
-  const handleReportConfirm = (id: number) => {
-    alert(`Reported comment ${id}`);
+
+  // ------------------------------------------------------------
+  // Report comment
+  // ------------------------------------------------------------
+  const handleReportConfirm = async (id: number) => {
+    await reportComment(id, "Inappropriate content");
+
     setConfirmModal({ open: false, action: "report", id: null });
   };
-  const handleReact = (id: number, type: string) => setComments((prev) => reactRecursive(prev, id, type));
+
+  // ------------------------------------------------------------
+  // React to comment
+  // ------------------------------------------------------------
+  const handleReact = async (id: number, type: string) => {
+    // optimistic UI
+    setComments((prev) => reactRecursive(prev, id, type));
+
+    await reactToComment(id, type as any);
+  };
+
+  // ------------------------------------------------------------
+  // UI
+  // ------------------------------------------------------------
+  if (loading) return <div className="text-gray-500">Loading comments...</div>;
 
   return (
     <div className="mt-6 border-t border-gray-300 pt-6">
@@ -54,8 +199,10 @@ const CommentsSection: React.FC = () => {
 
       {visibleCount < comments.length && (
         <button
-          onClick={() => setVisibleCount((v) => Math.min(comments.length, v + LOAD_MORE_STEP))}
-          className="py-1 px-4 text-sm hover:bg-gray-200 rounded-md flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+          onClick={() =>
+            setVisibleCount((v) => Math.min(comments.length, v + LOAD_MORE_STEP))
+          }
+          className="py-1 px-4 text-sm hover:bg-gray-200 rounded-md"
         >
           Show {Math.min(LOAD_MORE_STEP, comments.length - visibleCount)} more...
         </button>
@@ -69,8 +216,12 @@ const CommentsSection: React.FC = () => {
             currentUser={currentUser}
             onReply={(parentId, text) => handleAddComment(text, parentId)}
             onEdit={handleEdit}
-            onDelete={(id) => setConfirmModal({ open: true, action: "delete", id })}
-            onReport={(id) => setConfirmModal({ open: true, action: "report", id })}
+            onDelete={(id) =>
+              setConfirmModal({ open: true, action: "delete", id })
+            }
+            onReport={(id) =>
+              setConfirmModal({ open: true, action: "report", id })
+            }
             onReact={handleReact}
           />
         ))}
@@ -83,21 +234,24 @@ const CommentsSection: React.FC = () => {
             if (!t) return;
             handleAddComment(t);
             setNewComment("");
-            setVisibleCount((v) => Math.max(v, visibleCount + 1));
+            setVisibleCount((v) => v + 1);
           }}
           onDiscard={() => setNewComment("")}
           showButtons={newComment.length > 0}
           placeholder="Add a public comment..."
-          avatarUrl="https://i.pravatar.cc/150?img=12" 
         />
       </div>
 
       <ConfirmModal
         open={confirmModal.open}
-        title={confirmModal.action === "delete" ? "Delete Comment?" : "Report Comment?"}
+        title={
+          confirmModal.action === "delete"
+            ? "Delete Comment?"
+            : "Report Comment?"
+        }
         description={
           confirmModal.action === "delete"
-            ? "Are you sure you want to delete this comment? This action cannot be undone."
+            ? "Are you sure you want to delete this comment?"
             : "Are you sure you want to report this comment?"
         }
         onConfirm={() =>
@@ -105,7 +259,9 @@ const CommentsSection: React.FC = () => {
             ? handleDeleteConfirm(confirmModal.id!)
             : handleReportConfirm(confirmModal.id!)
         }
-        onCancel={() => setConfirmModal({ open: false, action: "delete", id: null })}
+        onCancel={() =>
+          setConfirmModal({ open: false, action: "delete", id: null })
+        }
       />
     </div>
   );

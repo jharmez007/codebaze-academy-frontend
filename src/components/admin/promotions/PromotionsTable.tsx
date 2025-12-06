@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -38,31 +38,53 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { getPromo, deletePromo } from "../../../services/couponService";
 
 type Promotion = {
   id: string;
   code: string;
-  type: "percentage" | "fixed";
+  type: "percentage" | "amount";
   value: number;
   course: string;
   expiry: string;
   usage: number;
   maxUsage: number;
+  applies_to_all: boolean;
+  courses?: { id: string; title: string }[];
 };
 
-export default function PromotionsTable({ data }: { data: Promotion[] }) {
-  const [promos, setPromos] = useState(data);
+export default function PromotionsTable() {
+  const [promos, setPromos] = useState<Promotion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
   const [statsPromo, setStatsPromo] = useState<Promotion | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-
   const totalPages = Math.ceil(promos.length / pageSize);
   const paginated = promos.slice((page - 1) * pageSize, page * pageSize);
 
+  // Fetch coupons on mount
+  useEffect(() => {
+  const fetchPromos = async () => {
+    setLoading(true);
+    const response = await getPromo();
+    setLoading(false);
+
+    if (response.status === 200 && response.data) {
+      setPromos(response.data);
+    } else {
+      console.error(response.message);
+    }
+  };
+
+  fetchPromos();
+}, []);
+
+
+  // Handle save from PromotionForm
   const handleSave = (promo: Promotion) => {
     if (editingPromo) {
       // update existing promo
@@ -70,11 +92,26 @@ export default function PromotionsTable({ data }: { data: Promotion[] }) {
         prev.map((p) => (p.id === promo.id ? { ...promo, usage: p.usage } : p))
       );
     } else {
-      // add new promo
-      setPromos((prev) => [...prev, { ...promo, usage: 0 }]);
+      // add new promo (real-time update)
+      setPromos((prev) => [{ ...promo, usage: 0 }, ...prev]);
     }
     setIsOpen(false);
     setEditingPromo(null);
+  };
+
+  // Handle delete
+  const handleDelete = async (promoId: string | number) => {
+    try {
+      const response = await deletePromo(Number(promoId));
+      if (response.status === 200) {
+        setPromos((prev) => prev.filter((p) => p.id !== promoId));
+      } else {
+        alert(response.message || "Failed to delete promo");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred while deleting the promo");
+    }
   };
 
   return (
@@ -108,7 +145,13 @@ export default function PromotionsTable({ data }: { data: Promotion[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginated.length === 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-6">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : paginated.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-gray-500 py-6">
                   No promotions found
@@ -123,7 +166,11 @@ export default function PromotionsTable({ data }: { data: Promotion[] }) {
                       ? `${promo.value}%`
                       : `₦${promo.value.toLocaleString()}`}
                   </TableCell>
-                  <TableCell>{promo.course}</TableCell>
+                  <TableCell>
+                    {promo.applies_to_all
+                      ? "All courses"
+                      : promo.course}
+                  </TableCell>
                   <TableCell>
                     {new Date(promo.expiry).toLocaleDateString()}
                   </TableCell>
@@ -139,9 +186,7 @@ export default function PromotionsTable({ data }: { data: Promotion[] }) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => {
-                            setStatsPromo(promo);
-                          }}
+                          onClick={() => setStatsPromo(promo)}
                         >
                           View Stats
                         </DropdownMenuItem>
@@ -162,9 +207,7 @@ export default function PromotionsTable({ data }: { data: Promotion[] }) {
                           title="Delete Promotion"
                           description={`Are you sure you want to delete ${promo.code}?`}
                           confirmLabel="Delete"
-                          onConfirm={() => {
-                            setPromos(promos.filter((p) => p.id !== promo.id));
-                          }}
+                          onConfirm={() => handleDelete(promo.id)}
                         />
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -250,7 +293,7 @@ export default function PromotionsTable({ data }: { data: Promotion[] }) {
           </DialogHeader>
           <PromotionForm
             initialData={editingPromo || undefined}
-            onSubmit={handleSave}
+            onSuccess={handleSave as any} 
             onCancel={() => {
               setIsOpen(false);
               setEditingPromo(null);

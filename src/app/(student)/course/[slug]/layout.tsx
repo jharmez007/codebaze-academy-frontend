@@ -9,8 +9,8 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
 
   if (!course) {
     return {
-      title: "Course Not Found",
-      description: "The course you are looking for does not exist.",
+      title: "Courses",
+      description: " Browse our available courses",
     };
   }
 

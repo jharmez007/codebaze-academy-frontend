@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { BookOpen, CheckCircle, HelpCircle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { suspendStudent } from "@/services/studentService";
 
 type Course = {
   title: string;
@@ -19,7 +22,7 @@ type Activity = {
 };
 
 type Student = {
-  id: string;
+  id: number;
   name: string;
   email: string;
   courses: Course[];
@@ -29,10 +32,32 @@ type Student = {
 };
 
 export default function StudentProfile({ student }: { student: Student }) {
+  const [currentStatus, setCurrentStatus] = useState(student.status);
+
+  // 🔹 Suspend / Reactivate student
+  const handleAction = async (action: "suspend" | "activate") => {
+    try {
+      const res = await suspendStudent(Number(student.id), action);
+      if (res.status && res.status < 300) {
+        const newStatus = action === "suspend" ? "suspended" : "active";
+        setCurrentStatus(newStatus);
+        toast.success(
+          action === "suspend"
+            ? `${student.name} has been suspended`
+            : `${student.name} has been reactivated`
+        );
+      } else {
+        toast.error(res.message || "Action failed");
+      }
+    } catch {
+      toast.error("An unexpected error occurred");
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto bg-white dark:bg-background shadow rounded-lg p-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center text-sm  mb-4">
+      <nav className="flex items-center text-sm mb-4">
         <Link href="/admin/students" className="hover:underline">
           Students
         </Link>
@@ -44,8 +69,8 @@ export default function StudentProfile({ student }: { student: Student }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">{student.name}</h1>
-          <p className="">{student.email}</p>
-          <p className="text-sm ">
+          <p>{student.email}</p>
+          <p className="text-sm">
             Joined {new Date(student.signupDate).toLocaleDateString()}
           </p>
         </div>
@@ -53,39 +78,32 @@ export default function StudentProfile({ student }: { student: Student }) {
         <div className="flex items-center gap-3 mt-3 sm:mt-0">
           <span
             className={`px-3 py-1 rounded text-sm font-medium ${
-              student.status === "active"
+              currentStatus === "active"
                 ? "bg-green-100 text-green-700"
                 : "bg-red-100 text-red-700"
             }`}
           >
-            {student.status}
+            {currentStatus}
           </span>
 
-          {student.status === "active" ? (
-            <ConfirmModal
-              trigger={
-                <Button variant="destructive" size="sm">
-                  Suspend
-                </Button>
-              }
-              title="Suspend Student"
-              description={`Are you sure you want to suspend ${student.name}?`}
-              confirmLabel="Suspend"
-              onConfirm={() => alert(`Suspended ${student.name}`)}
-            />
-          ) : (
-            <ConfirmModal
-              trigger={
-                <Button variant="default" size="sm">
-                  Reactivate
-                </Button>
-              }
-              title="Reactivate Student"
-              description={`Are you sure you want to reactivate ${student.name}?`}
-              confirmLabel="Reactivate"
-              onConfirm={() => alert(`Reactivated ${student.name}`)}
-            />
-          )}
+          <ConfirmModal
+            trigger={
+              <Button
+                variant={currentStatus === "active" ? "destructive" : "default"}
+                size="sm"
+              >
+                {currentStatus === "active" ? "Suspend" : "Reactivate"}
+              </Button>
+            }
+            title={currentStatus === "active" ? "Suspend Student" : "Reactivate Student"}
+            description={`Are you sure you want to ${
+              currentStatus === "active" ? "suspend" : "reactivate"
+            } ${student.name}?`}
+            confirmLabel={currentStatus === "active" ? "Suspend" : "Reactivate"}
+            onConfirm={() =>
+              handleAction(currentStatus === "active" ? "suspend" : "activate")
+            }
+          />
         </div>
       </div>
 
@@ -97,19 +115,15 @@ export default function StudentProfile({ student }: { student: Student }) {
             {student.courses.map((course, i) => (
               <div key={i}>
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium ">
-                    {course.title}
-                  </span>
-                  <span className="text-sm ">
-                    {course.progress}%
-                  </span>
+                  <span className="text-sm font-medium">{course.title}</span>
+                  <span className="text-sm">{course.progress}%</span>
                 </div>
                 <Progress value={course.progress} className="h-2" />
               </div>
             ))}
           </div>
         ) : (
-          <p className=" text-sm">No courses enrolled.</p>
+          <p className="text-sm">No courses enrolled.</p>
         )}
       </div>
 
@@ -133,8 +147,8 @@ export default function StudentProfile({ student }: { student: Student }) {
                   )}
                 </span>
                 <div>
-                  <p className="text-sm ">{act.text}</p>
-                  <p className="text-xs ">
+                  <p className="text-sm">{act.text}</p>
+                  <p className="text-xs">
                     {new Date(act.date).toLocaleDateString()}
                   </p>
                 </div>
@@ -142,7 +156,7 @@ export default function StudentProfile({ student }: { student: Student }) {
             ))}
           </ul>
         ) : (
-          <p className=" text-sm">No recent activity.</p>
+          <p className="text-sm">No recent activity.</p>
         )}
       </div>
     </div>

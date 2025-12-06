@@ -157,7 +157,7 @@ export default function CoursesTable() {
                 {paginated.map((course) => (
                   <TableRow key={course.id}>
                     <TableCell className="font-medium">{course.title}</TableCell>
-                    <TableCell>${course.price}</TableCell>
+                    <TableCell>₦{course.price.toLocaleString()}</TableCell>
                     <TableCell>{course.total_lessons}</TableCell>
                     <TableCell>
                       <span

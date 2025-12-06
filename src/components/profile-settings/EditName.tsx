@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { getProfile, updateProfile } from "@/services/profileService";
 
 interface EditNameProps {
   activeEdit: string | null;
@@ -20,6 +21,24 @@ const EditName: React.FC<EditNameProps> = ({
 
   // ref for the edit form container to detect outside clicks
   const formRef = useRef<HTMLDivElement | null>(null);
+
+  // 🔥 Fetch user data on mount
+  useEffect(() => {
+    async function loadProfile() {
+      const { data } = await getProfile();
+      if (data?.full_name) {
+        const parts = data.full_name.trim().split(" ");
+        const first = parts.shift() || "";
+        const last = parts.join(" ");
+
+        setSavedFirst(first);
+        setSavedLast(last);
+        setFirstName(first);
+        setLastName(last);
+      }
+    }
+    loadProfile();
+  }, []);
 
   // when edit opens, populate inputs with saved values
   useEffect(() => {
@@ -59,13 +78,23 @@ const EditName: React.FC<EditNameProps> = ({
     onEdit && onEdit(null);
   };
 
-  const handleSave = (e?: React.FormEvent) => {
+  // 🔥 PATCH request to backend
+  const handleSave = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!isFormValid) return;
-    setSavedFirst(firstName.trim());
-    setSavedLast(lastName.trim());
-    onEdit && onEdit(null);
-    toast.success("Name updated");
+
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+
+    const res = await updateProfile({ full_name: fullName });
+
+    if (res?.status === 200) {
+      setSavedFirst(firstName.trim());
+      setSavedLast(lastName.trim());
+      toast.success("Name updated");
+      onEdit && onEdit(null);
+    } else {
+      toast.error(res?.message || "Failed to update name");
+    }
   };
 
   return (
@@ -82,7 +111,7 @@ const EditName: React.FC<EditNameProps> = ({
             <div className='truncate text-wrap'>{savedFirst} {savedLast}</div>
           </div>
 
-          {/* Edit control - faded and non-interactive when any edit is active */}
+          {/* Edit control */}
           <div
             onClick={openEdit}
             className={
@@ -100,10 +129,9 @@ const EditName: React.FC<EditNameProps> = ({
       </div>
     )}
 
-    {/* Edit Form - shown when editing */}
+    {/* Edit Form */}
     {activeEdit === "name" && (
       <>
-        {/* overlay disables all interaction/hover outside the form */}
         <div
           className="fixed inset-0 bg-transparent z-40"
           onMouseDown={() => onEdit && onEdit(null)}
@@ -114,23 +142,18 @@ const EditName: React.FC<EditNameProps> = ({
           ref={formRef}
           className='edit-form z-50 pointer-events-auto relative flex flex-col bg-white border border-gray-300 rounded-md text-sm'
         >
-          {/* card header */}
           <div className='flex justify-between items-center px-6 pt-5'>
             <div>
               <div className="font-semibold ">Name</div>
             </div>
           </div>
 
-          {/* card body */}
           <div className='px-6 py-5'>
             <form onSubmit={handleSave}>
               <div className='flex flex-wrap'>
                 <div className="px-1 grow-0 shrink-0 basis-[50%]">
                   <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='firstname'
-                    >
+                    <label className='mb-1' htmlFor='firstname'>
                         First name
                     </label>
                     <input 
@@ -147,10 +170,7 @@ const EditName: React.FC<EditNameProps> = ({
                 
                 <div className="px-1 grow-0 shrink-0 basis-[50%]">
                   <div className='mb-3'>
-                    <label 
-                      className='mb-1' 
-                      htmlFor='lastname'
-                    >
+                    <label className='mb-1' htmlFor='lastname'>
                         Last name
                     </label>
                     <input 
@@ -189,7 +209,7 @@ const EditName: React.FC<EditNameProps> = ({
       </>
     )}
    </div>
-  )
-}
+  );
+};
 
-export default EditName
+export default EditName;

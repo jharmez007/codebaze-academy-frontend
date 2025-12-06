@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { logout as logoutService } from "@/services/authService"; // ← import logout service
 
 interface User {
   id: string;
@@ -15,7 +16,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,12 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(token);
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    setToken(null);
-  };
+  const logout = async () => {
+      try {
+        await logoutService(); // ← API call to backend
+      } catch (error) {
+        console.warn("Logout API failed, but clearing session anyway.");
+      }
+
+      // Clear local session regardless of API errors
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setToken(null);
+      setUser(null);
+    };
 
   return (
     <AuthContext.Provider value={{ user, token, loading, isAuthenticated: !!token, login, logout }}>

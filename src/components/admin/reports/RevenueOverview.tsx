@@ -4,9 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RevenueCards } from "./RevenueCards";
 import { RevenueCharts } from "./RevenueCharts";
-import { monthlyRevenue, revenueByCourse } from "@/data/revenue";
 import { RevenueSkeleton } from "./ReportsSkeleton";
 import { ExportSummaryButton } from "./ExportSummaryButton";
+import { getAdminOverview } from "@/services/adminService";
 
 export function RevenueOverview() {
   // --- FILTER STATES ---
@@ -15,31 +15,47 @@ export function RevenueOverview() {
   const [course, setCourse] = useState("All");
   const [loading, setLoading] = useState(true);
 
+  // --- DATA STATES ---
+  const [monthlyRevenueData, setMonthlyRevenueData] = useState<any[]>([]);
+  const [revenueByCourseData, setRevenueByCourseData] = useState<any[]>([]);
+  const [activeStudents, setActiveStudents] = useState<number>(0); // can be calculated from statsData if available
+
   const chartsRef = useRef<any>(null);
 
   useEffect(() => {
-    // simulate API fetch delay
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        const data = await getAdminOverview();
+
+        // Set API data
+        setMonthlyRevenueData(data.monthlyRevenue);
+        setRevenueByCourseData(data.revenueByCourse);
+        setActiveStudents(data.statsData?.find((s: any) => s.label === "Students")?.value || 0);
+      } catch (error) {
+        console.error("Error fetching revenue data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   if (loading) return <RevenueSkeleton />;
 
-  // --- APPLY FILTERS (mock logic) ---
-  const filteredMonthly = monthlyRevenue.filter((d) => {
-    // Filter by month if not "All"
+  // --- APPLY FILTERS ---
+  const filteredMonthly = monthlyRevenueData.filter((d) => {
     if (month !== "All" && d.month !== month) return false;
     return true;
   });
 
   const filteredCourses =
-    course === "All" ? revenueByCourse : revenueByCourse.filter((c) => c.course === course);
+    course === "All" ? revenueByCourseData : revenueByCourseData.filter((c) => c.course === course);
 
   // --- KPI CALCULATIONS ---
   const totalRevenue = filteredMonthly.reduce((sum, m) => sum + m.revenue, 0);
   const monthlyRev =
     filteredMonthly.length > 0 ? filteredMonthly[filteredMonthly.length - 1].revenue : 0;
-  const activeStudents = 320; // mock
   const avgRevPerStudent = activeStudents > 0 ? totalRevenue / activeStudents : 0;
 
   return (
@@ -65,18 +81,9 @@ export function RevenueOverview() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All Months</SelectItem>
-            <SelectItem value="Jan">January</SelectItem>
-            <SelectItem value="Feb">February</SelectItem>
-            <SelectItem value="Mar">March</SelectItem>
-            <SelectItem value="Apr">April</SelectItem>
-            <SelectItem value="May">May</SelectItem>
-            <SelectItem value="Jun">June</SelectItem>
-            <SelectItem value="Jul">July</SelectItem>
-            <SelectItem value="Aug">August</SelectItem>
-            <SelectItem value="Sep">September</SelectItem>
-            <SelectItem value="Oct">October</SelectItem>
-            <SelectItem value="Nov">November</SelectItem>
-            <SelectItem value="Dec">December</SelectItem>
+            {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map((m) => (
+              <SelectItem key={m} value={m}>{m}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -87,7 +94,7 @@ export function RevenueOverview() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="All">All Courses</SelectItem>
-            {revenueByCourse.map((c) => (
+            {revenueByCourseData.map((c) => (
               <SelectItem key={c.course} value={c.course}>
                 {c.course}
               </SelectItem>
@@ -98,28 +105,28 @@ export function RevenueOverview() {
 
       {/* Export Button */}
       <div className="flex justify-end">
-        <ExportSummaryButton 
+        <ExportSummaryButton
           targetId="revenue-cards"
           chartsRef={chartsRef}
-          filters={{ year, month, course }} 
+          filters={{ year, month, course }}
         />
       </div>
 
-      {/* Overview wrapper to capture */}
+      {/* Overview wrapper */}
       <div id="revenue-summary" className="space-y-6">
         {/* KPIs */}
         <RevenueCards
-            totalRevenue={totalRevenue}
-            monthlyRevenue={monthlyRev}
-            activeStudents={activeStudents}
-            avgRevenuePerStudent={avgRevPerStudent}
+          totalRevenue={totalRevenue}
+          monthlyRevenue={monthlyRev}
+          activeStudents={activeStudents}
+          avgRevenuePerStudent={avgRevPerStudent}
         />
 
         {/* CHARTS */}
         <RevenueCharts
-            ref={chartsRef}
-            monthlyData={filteredMonthly}
-            courseData={filteredCourses}
+          ref={chartsRef}
+          monthlyData={filteredMonthly}
+          courseData={filteredCourses}
         />
       </div>
     </div>

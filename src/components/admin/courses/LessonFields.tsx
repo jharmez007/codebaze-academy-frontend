@@ -15,6 +15,7 @@ type LessonFieldsProps = {
   courseId?: number; // ✅ add courseId
 };
 
+
 export function LessonFields({ control, sectionIndex, courseId }: LessonFieldsProps) {
   const { fields: lessonFields, append, remove } = useFieldArray({
     control,
@@ -103,7 +104,7 @@ export function LessonFields({ control, sectionIndex, courseId }: LessonFieldsPr
           <Button
             type="button"
             variant="destructive"
-            onClick={() => handleRemoveLesson(lesson.id, lessonIndex)} // ✅ API call
+            onClick={() => handleRemoveLesson((lesson as any)?.id, lessonIndex)} // ✅ API call
           >
             Remove Lesson
           </Button>

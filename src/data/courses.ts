@@ -1,6 +1,4 @@
-import course1 from "../../public/course1.jpg";
-import course2 from "../../public/course2.jpg";
-import course3 from "../../public/course3.jpg";
+import css from "../../public/css-mastery.jpg";
 
 export const courses = [
   {
@@ -11,7 +9,7 @@ export const courses = [
       "Master the essentials of HTML, CSS, and JavaScript to build strong, modern web interfaces from scratch.",
     longDescription:
       "This comprehensive course covers everything you need to become a proficient frontend developer. You'll start with the basics of the web, move through HTML and CSS, and then dive deep into JavaScript.",
-    image: course1,
+    image: css,
     total: 28,
     price: "45",
     sections: [
@@ -253,7 +251,7 @@ export const courses = [
       "Unlock the full power of HTML. Learn semantic markup, accessibility, and best practices for building robust web pages.",
     longDescription:
       "Dive deep into HTML and discover how to create well-structured, accessible, and SEO-friendly web pages. This course covers everything from basic tags to advanced semantic elements, forms, tables, and multimedia integration.",
-    image: course2,
+    image: css,
     total: 12,
     completed: 5,
     price: "20",
@@ -327,7 +325,7 @@ export const courses = [
       "Take your CSS skills to the next level. Explore layouts, animations, responsive design, and advanced styling techniques.",
     longDescription:
       "This course is designed for those who want to become CSS experts. You'll learn about advanced selectors, layout systems like Flexbox and Grid, responsive design, animations, transitions, and how to create visually stunning web pages.",
-    image: course3,
+    image: css,
     total: 15,
     completed: 2,
     price: "35",

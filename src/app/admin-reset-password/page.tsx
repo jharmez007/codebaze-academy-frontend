@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
@@ -9,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { successToast, errorToast } from "@/lib/toast";
 import { resetPassword, verifyResetToken } from "@/services/authService";
 
-export default function AdminResetPasswordPage() {
+function AdminResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const email = searchParams.get("email") ?? undefined; // convert null to undefined
+  const email = searchParams.get("email") ?? undefined;
 
   const [isValidLink, setIsValidLink] = useState<boolean | null>(null);
   const [form, setForm] = useState({
@@ -42,46 +43,56 @@ export default function AdminResetPasswordPage() {
     validateLink();
   }, [token, email]);
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const passwordValid =
+    form.password.length >= 6 &&
+    /[a-z]/.test(form.password) &&
+    /[A-Z]/.test(form.password);
 
-  if (form.password.length < 8) {
-    errorToast("Password must be at least 8 characters long");
-    return;
-  }
+  const canSubmit =
+    passwordValid &&
+    form.confirmPassword.length >= 6 &&
+    form.password === form.confirmPassword;
 
-  if (form.password !== form.confirmPassword) {
-    errorToast("Passwords do not match");
-    return;
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (!token || !email) {
-    errorToast("Invalid password reset link");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const { status, message } = await resetPassword({
-      token,
-      email,
-      password: form.password,
-    });
-
-    if (status === 200) {
-      successToast("Password reset successful! Redirecting to login...");
-      // Auto-redirect after 2 seconds
-      setTimeout(() => router.push("/admin-login"), 2000);
-    } else {
-      errorToast(message || "Unable to reset password");
+    if (!token || !email) {
+      errorToast("Invalid password reset link");
+      return;
     }
-  } catch (err: any) {
-    errorToast(err.message || "Something went wrong");
-  } finally {
-    setLoading(false);
-  }
-};
 
+    if (form.password !== form.confirmPassword) {
+      errorToast("Passwords do not match");
+      return;
+    }
+
+    if (!passwordValid) {
+      errorToast(
+        "Password must be at least 6 characters and include both lower and upper case letters."
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { status, message } = await resetPassword({
+        token,
+        email,
+        password: form.password,
+      });
+
+      if (status === 200) {
+        successToast("Password reset successful! Redirecting to login...");
+        setTimeout(() => router.push("/admin-login"), 2000);
+      } else {
+        errorToast(message || "Unable to reset password");
+      }
+    } catch (err: any) {
+      errorToast(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (isValidLink === null) {
     return (
@@ -144,6 +155,12 @@ export default function AdminResetPasswordPage() {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
+          <p className="text-xs text-gray-600 mt-1">
+            Minimum 6 characters. Include both lower and upper case letters.
+            {!passwordValid && form.password.length > 0 && (
+              <span className="text-red-500"> — requirement not met</span>
+            )}
+          </p>
         </div>
 
         {/* Confirm Password */}
@@ -163,16 +180,25 @@ export default function AdminResetPasswordPage() {
             />
             <button
               type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              onClick={() =>
+                setShowConfirmPassword(!showConfirmPassword)
+              }
               className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              {showConfirmPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
             </button>
           </div>
+          {form.confirmPassword && form.password !== form.confirmPassword && (
+            <p className="text-sm text-red-500 mt-2">Passwords do not match</p>
+          )}
         </div>
 
         {/* Submit */}
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
           {loading ? "Resetting..." : "Reset Password"}
         </Button>
 
@@ -184,5 +210,20 @@ export default function AdminResetPasswordPage() {
         </p>
       </form>
     </div>
+  );
+}
+
+// ✅ Apply Suspense fix (same file)
+export default function AdminResetPasswordWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-[9999]">
+          <div className="w-10 h-10 border-4 border-gray-300 border-t-green-600 rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <AdminResetPasswordPage />
+    </Suspense>
   );
 }

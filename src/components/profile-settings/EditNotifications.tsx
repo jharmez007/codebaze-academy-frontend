@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Check, Square } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface EditNotificationsProps {
   activeEdit: string | null;

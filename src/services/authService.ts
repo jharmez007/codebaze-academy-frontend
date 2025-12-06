@@ -35,6 +35,29 @@ export async function login(
   }
 }
 
+export async function logout(): Promise<{
+  data?: any;
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.post("/logout");
+
+    return {
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
+    };
+  }
+}
+
+
 // -----------------------------
 // Register API
 // -----------------------------
@@ -206,6 +229,83 @@ export async function sendVerificationOTP(
   try {
     const response = await Api.post("/resend-verification", payload);
     return { status: response.status, message: response.data.message };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
+    };
+  }
+}
+
+export async function changePassword(payload: {
+  old_password: string;
+  new_password: string;
+}): Promise<{
+  data?: any;
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.post("/auth/change-password", payload);
+
+    return {
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
+    };
+  }
+}
+
+export async function changeEmail(newEmail: string): Promise<{
+  data?: any;
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.post("/auth/change-email", {
+      new_email: newEmail,
+    });
+
+    return {
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
+    };
+  }
+}
+
+export async function verifyNewEmail(
+  email: string,
+  token: string
+): Promise<{
+  data?: any;
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.post("/auth/verify-new-email", {
+      email,
+      token,
+    });
+
+    return {
+      data: response.data,
+      status: response.status,
+    };
   } catch (error: any) {
     return {
       message:

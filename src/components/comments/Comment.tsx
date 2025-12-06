@@ -1,10 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { Edit, Trash2, Flag, MessageCircleReply } from "lucide-react";
+import { Edit, Trash2, Flag, MessageCircleReply, UserRound } from "lucide-react";
 import ReactionBar from "./ReactionBar";
 import CommentInput from "./CommentInput";
-import { CommentType } from "@/data/comments";
+import { normalizeImagePath } from "@/utils/normalizeImagePath";
+
+export interface CommentType {
+  id: number;
+  author: string;
+  role?: string;
+  avatar?: string;
+  text: string;
+  timestamp?: string;
+  replies?: CommentType[];
+  reactions?: Record<string, number>;
+  reactedByUser?: Record<string, boolean>;
+}
 
 interface CommentProps {
   comment: CommentType;
@@ -55,11 +67,19 @@ const Comment: React.FC<CommentProps> = ({
     <div className={`relative ${nested ? "pl-8 border-l border-gray-300" : ""} transition-all`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-start gap-3">
-          <img
-            src={comment.avatar ?? "/default-avatar.png"}
-            alt={comment.author}
-            className="w-8 h-8 rounded-full object-cover"
-          />
+          {
+            comment.avatar ? (
+              <img
+                src={normalizeImagePath(comment.avatar)}
+                alt={comment.author}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#E5C9A8] text-sm font-bold text-gray-800">
+                <UserRound className="w-4 h-4" />
+              </div>
+            )
+          }
           <div>
             <p className="font-semibold text-black">
               {comment.author}{" "}
@@ -161,8 +181,7 @@ const Comment: React.FC<CommentProps> = ({
               setShowReplyInput(false);
             }}
             placeholder="Write a reply..."
-            showButtons={replyText.length > 0}
-            avatarUrl={"https://i.pravatar.cc/150?img=12"} 
+            showButtons={replyText.length > 0} 
           />
         </div>
       )}

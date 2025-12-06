@@ -25,8 +25,12 @@ export default function CreateAccountPage() {
   const trimmedName = name.trim();
   const isGuestUser = trimmedName.toLowerCase() === "guest user";
 
+  // password validation: min 6 chars, at least one lower and one upper case
+  const passwordValid =
+    password.length >= 6 && /[a-z]/.test(password) && /[A-Z]/.test(password);
+
   // Validation
-  const canSubmit = password.length > 6 && trimmedName.length > 0 && !isGuestUser;
+  const canSubmit = passwordValid && trimmedName.length > 0 && !isGuestUser;
 
   // Fetch course matching slug
   useEffect(() => {
@@ -138,7 +142,12 @@ export default function CreateAccountPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
               />
-              <p>Minimum 6 characters</p>
+              <p className="text-xs text-gray-600 mt-1">
+                Minimum 6 characters.
+                {!passwordValid && password.length > 0 && (
+                  <span className="text-red-500"> Include both lower & upper case letters.</span>
+                )}
+              </p>
             </div>
 
             {error && <p className="text-red-500 mb-4">{error}</p>}
