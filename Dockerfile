@@ -5,6 +5,8 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+ENV NEXT_DISABLE_TURBOPACK=1
+ENV NEXT_TELEMETRY_DISABLED=1
 # Install deps needed for node-gyp (if required)
 RUN apk add --no-cache python3 make g++
 
