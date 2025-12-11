@@ -5,6 +5,8 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_DISABLE_TURBOPACK=1
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -15,7 +17,7 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps
 
-# Copy code and environment files
+# Copy code
 COPY . .
 
 # Build Next.js
