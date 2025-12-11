@@ -11,3 +11,5 @@ services:
     environment:
       - NODE_ENV=production
     restart: always
+
+   #//"build": "next build --turbopack",
