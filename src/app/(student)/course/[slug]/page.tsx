@@ -186,7 +186,7 @@ const CoursePage = () => {
                         className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 px-2 py-1 rounded transition font-medium"
                       >
                         <SquarePlay className="w-4 h-4 text-gray-600" />
-                        {lesson.title}
+                        <p className="truncate max-sm:w-70">{lesson.title}</p>
                       </Link>
                     </li>
                   ))}

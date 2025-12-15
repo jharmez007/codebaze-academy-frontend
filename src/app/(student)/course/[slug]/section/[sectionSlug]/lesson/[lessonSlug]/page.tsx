@@ -70,91 +70,86 @@ const LessonPage = () => {
 
 
   if (loading) return (
-    <div className="flex max-w-7xl mx-auto min-h-screen p-6 gap-6">
-      {/* Sidebar Skeleton */}
-      <aside className="w-64 flex-shrink-0 flex flex-col gap-4">
-        {/* Course header */}
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 bg-gray-300 rounded-md animate-pulse" />
-          <div className="flex flex-col gap-2 flex-1">
-            <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse" />
-            <div className="h-3 bg-gray-300 rounded w-1/2 animate-pulse" />
-          </div>
-        </div>
+    <div className="flex flex-col lg:flex-row max-w-7xl mx-auto min-h-screen p-4 lg:p-6 gap-6">
+  {/* Sidebar Skeleton — hidden on mobile */}
+  <aside className="hidden lg:flex w-64 flex-shrink-0 flex-col gap-4">
+    {/* Course header */}
+    <div className="flex items-center gap-3">
+      <div className="w-16 h-16 bg-gray-300 rounded-md animate-pulse" />
+      <div className="flex flex-col gap-2 flex-1">
+        <div className="h-4 bg-gray-300 rounded w-3/4 animate-pulse" />
+        <div className="h-3 bg-gray-300 rounded w-1/2 animate-pulse" />
+      </div>
+    </div>
 
-        {/* Sections */}
-        {Array.from({ length: 3 }).map((_, idx) => (
-          <div key={idx} className="flex flex-col gap-2">
-            {/* Section title */}
-            <div className="h-4 bg-gray-300 rounded w-5/6 animate-pulse" />
-            {/* Lessons */}
-            {Array.from({ length: 2 }).map((_, j) => (
-              <div
-                key={j}
-                className="h-3 bg-gray-300 rounded w-full ml-4 animate-pulse"
-              />
-            ))}
-          </div>
-        ))}
-      </aside>
-
-      {/* Lesson Page Skeleton */}
-      <main className="flex-1 flex flex-col gap-4">
-        {/* Breadcrumb */}
-        <div className="flex gap-2 mb-4">
-          {Array.from({ length: 4 }).map((_, idx) => (
-            <div
-              key={idx}
-              className="h-3 bg-gray-300 rounded w-20 animate-pulse"
-            />
-          ))}
-        </div>
-
-        {/* Title */}
-        <div className="h-6 w-1/3 bg-gray-300 rounded animate-pulse mb-4" />
-
-        {/* Video placeholder */}
-        <div className="aspect-video bg-gray-300 rounded animate-pulse mb-4" />
-
-        {/* Links */}
-        <div className="flex flex-col gap-2 mb-4">
-          {Array.from({ length: 2 }).map((_, idx) => (
-            <div
-              key={idx}
-              className="h-3 bg-gray-300 rounded w-1/4 animate-pulse"
-            />
-          ))}
-        </div>
-
-        {/* Text content */}
-        {Array.from({ length: 3 }).map((_, idx) => (
+    {/* Sections */}
+    {Array.from({ length: 3 }).map((_, idx) => (
+      <div key={idx} className="flex flex-col gap-2">
+        <div className="h-4 bg-gray-300 rounded w-5/6 animate-pulse" />
+        {Array.from({ length: 2 }).map((_, j) => (
           <div
-            key={idx}
-            className="h-3 bg-gray-300 rounded w-full animate-pulse mb-2"
+            key={j}
+            className="h-3 bg-gray-300 rounded w-full ml-4 animate-pulse"
           />
         ))}
+      </div>
+    ))}
+  </aside>
 
-        {/* Buttons */}
-        <div className="flex gap-2 mt-4">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <div
-              key={idx}
-              className="h-8 w-24 bg-gray-300 rounded animate-pulse"
-            />
-          ))}
-        </div>
-
-        {/* Comments section */}
-        <div className="mt-6 flex flex-col gap-2">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <div
-              key={idx}
-              className="h-12 bg-gray-300 rounded animate-pulse"
-            />
-          ))}
-        </div>
-      </main>
+  {/* Lesson Page Skeleton */}
+  <main className="flex-1 flex flex-col gap-4">
+    {/* Breadcrumb */}
+    <div className="flex gap-2 mb-4 flex-wrap">
+      {Array.from({ length: 4 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="h-3 bg-gray-300 rounded w-16 sm:w-20 animate-pulse"
+        />
+      ))}
     </div>
+
+    {/* Title */}
+    <div className="h-6 w-2/3 sm:w-1/3 bg-gray-300 rounded animate-pulse mb-4" />
+
+    {/* Video placeholder */}
+    <div className="aspect-video bg-gray-300 rounded animate-pulse mb-4" />
+
+    {/* Links */}
+    <div className="flex flex-col gap-2 mb-4">
+      {Array.from({ length: 2 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="h-3 bg-gray-300 rounded w-1/3 sm:w-1/4 animate-pulse"
+        />
+      ))}
+    </div>
+
+    {/* Text content */}
+    {Array.from({ length: 3 }).map((_, idx) => (
+      <div
+        key={idx}
+        className="h-3 bg-gray-300 rounded w-full animate-pulse mb-2"
+      />
+    ))}
+
+    {/* Buttons */}
+    <div className="flex gap-2 mt-4 flex-wrap">
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="h-8 w-20 sm:w-24 bg-gray-300 rounded animate-pulse"
+        />
+      ))}
+    </div>
+
+    {/* Comments section */}
+    <div className="mt-6 flex flex-col gap-2">
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <div key={idx} className="h-12 bg-gray-300 rounded animate-pulse" />
+      ))}
+    </div>
+  </main>
+</div>
   );
   if (!course || !section || !lesson) return <p>Lesson not found</p>;
 

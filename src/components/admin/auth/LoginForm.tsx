@@ -95,12 +95,12 @@ export default function LoginForm() {
       </p>
 
       {/* Sign up link */}
-      <p className="text-sm text-center mt-3 text-gray-500 dark:text-gray-400">
+      {/* <p className="text-sm text-center mt-3 text-gray-500 dark:text-gray-400">
         Don’t have an account?{" "}
         <a href="/admin-signup" className="text-green-600 hover:underline">
           Sign Up
         </a>
-      </p>
+      </p> */}
     </form>
   );
 }

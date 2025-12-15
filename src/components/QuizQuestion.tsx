@@ -23,9 +23,9 @@ const QuizQuestion = ({ quiz }: any) => {
           let bgColor = "bg-white"; // default
 
           if (showAnswer) {
-            if (opt === quiz.correct_answer) bgColor = "bg-green-100 border border-green-500";
+            if (opt === quiz.correct_answer) bgColor = "bg-green-100 border border-green-500 hover:bg-green-50";
             else if (opt === selected && opt !== quiz.correct_answer)
-              bgColor = "bg-red-100 border border-red-500";
+              bgColor = "bg-red-100 border border-red-500 hover:bg-red-50";
           } else if (opt === selected) {
             bgColor = "bg-gray-100 border border-gray-400";
           }
@@ -33,7 +33,7 @@ const QuizQuestion = ({ quiz }: any) => {
           return (
             <button
               key={i}
-              className={`text-left p-2 rounded ${bgColor} transition`}
+              className={`text-left p-2 rounded ${bgColor} transition cursor-pointer hover:bg-gray-50 `}
               onClick={() => !showAnswer && setSelected(opt)}
             >
               {opt}

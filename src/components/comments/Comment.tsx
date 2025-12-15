@@ -4,19 +4,10 @@ import React, { useState } from "react";
 import { Edit, Trash2, Flag, MessageCircleReply, UserRound } from "lucide-react";
 import ReactionBar from "./ReactionBar";
 import CommentInput from "./CommentInput";
-import { normalizeImagePath } from "@/utils/normalizeImagePath";
+import { normalizeImagePath } from "../../utils/normalizeImagePath";
+import { formatRelativeTime } from "../../utils/relativeTime";
 
-export interface CommentType {
-  id: number;
-  author: string;
-  role?: string;
-  avatar?: string;
-  text: string;
-  timestamp?: string;
-  replies?: CommentType[];
-  reactions?: Record<string, number>;
-  reactedByUser?: Record<string, boolean>;
-}
+import type { CommentType } from "./commentType";
 
 interface CommentProps {
   comment: CommentType;
@@ -83,11 +74,15 @@ const Comment: React.FC<CommentProps> = ({
           <div>
             <p className="font-semibold text-black">
               {comment.author}{" "}
-              {comment.role ? (
+              {/* {comment.role ? (
                 <span className="text-xs text-gray-500">({comment.role})</span>
-              ) : null}
+              ) : null} */}
             </p>
-            {comment.timestamp && <p className="text-xs text-gray-400">{comment.timestamp}</p>}
+            {comment.timestamp && (
+              <p className="text-xs text-gray-400">
+                {formatRelativeTime(comment.timestamp)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -205,7 +200,7 @@ const Comment: React.FC<CommentProps> = ({
           {comment.replies && visibleReplies < comment.replies.length && (
             <button
               onClick={() => setVisibleReplies((v) => Math.min(comment.replies!.length, v + 2))}
-              className="py-3 px-5 text-sm bg-gray-300 border rounded-md flex items-center justify-center transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+              className="py-1 px-4 text-sm hover:bg-gray-200 rounded-md"
             >
               Show {Math.min(2, comment.replies.length - visibleReplies)} more replies...
             </button>

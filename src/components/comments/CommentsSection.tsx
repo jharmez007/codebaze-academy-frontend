@@ -10,7 +10,10 @@ import {
   editRecursive,
   deleteRecursive,
   reactRecursive,
+  replaceIdRecursive,
 } from "./helpers";
+
+import type { CommentType } from "./commentType";
 
 import { getProfile } from "@/services/profileService";
 import {
@@ -22,16 +25,6 @@ import {
   reportComment,
 } from "@/services/commentService";
 
-export interface CommentType {
-  id: number;
-  author: string;
-  text: string;
-  timestamp: string;
-  avatar?: string;
-  reactions: Record<string, number>;
-  reactedByUser: Record<string, boolean>;
-  replies: CommentType[];
-}
 
 const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
   const currentUser = "You";
@@ -142,7 +135,7 @@ const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
 
     if (res.data?.id) {
       setComments((prev) =>
-        prev.map((c) => (c.id === tempId ? { ...c, id: res.data.id } : c))
+        replaceIdRecursive(prev, tempId, res.data.id)
       );
     }
   };
@@ -162,9 +155,14 @@ const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
   // ------------------------------------------------------------
   const handleDeleteConfirm = async (id: number) => {
     // optimistic UI
-    setComments((prev) => deleteRecursive(prev, id));
+    const prev = comments;
+    setComments(deleteRecursive(prev, id));
 
-    await deleteComment(id);
+    try {
+      await deleteComment(id);
+    } catch {
+      setComments(prev);
+    }
 
     setConfirmModal({ open: false, action: "delete", id: null });
   };

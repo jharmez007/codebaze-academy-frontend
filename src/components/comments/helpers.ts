@@ -1,13 +1,4 @@
-export interface CommentType {
-  id: number;
-  author: string;
-  text: string;
-  timestamp: string;
-  avatar?: string;
-  reactions: Record<string, number>;
-  reactedByUser: Record<string, boolean>;
-  replies: CommentType[];
-}
+import type { CommentType } from "./commentType";
 
 export const addReplyRecursive = (
   arr: CommentType[],
@@ -58,3 +49,24 @@ export const reactRecursive = (
     if (c.replies) return { ...c, replies: reactRecursive(c.replies, id, type) };
     return c;
   });
+
+  export const replaceIdRecursive = (
+  comments: CommentType[],
+  tempId: number,
+  realId: number
+): CommentType[] => {
+  return comments.map((c) => {
+    if (c.id === tempId) {
+      return { ...c, id: realId };
+    }
+
+    if (c.replies?.length) {
+      return {
+        ...c,
+        replies: replaceIdRecursive(c.replies, tempId, realId),
+      };
+    }
+
+    return c;
+  });
+}
