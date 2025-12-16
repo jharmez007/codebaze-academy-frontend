@@ -2,7 +2,6 @@
 import React from "react";
 import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { successToast, errorToast, infoToast } from "@/lib/toast";
 
 import { getCourses, getCourseById, Course } from "@/services/studentCourseService";
@@ -511,7 +510,7 @@ const handleLogout = () => {
         <div className="border border-gray-300 rounded-lg p-6">
           {/* Course Summary */}
           <div className="flex items-start space-x-4 mb-4">
-            <Image
+            <img
               src={normalizeImagePath(course.image as any)}
               alt={course.title}
               width={84}

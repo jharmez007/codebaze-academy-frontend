@@ -2,7 +2,6 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ListFilter, ArrowUpDown, Search } from "lucide-react";
 import { getProducts } from "@/services/studentService";
@@ -300,7 +299,7 @@ export default function ProductsPage() {
                         ? `/checkout/${product.slug}`
                         : `/course/${product.slug}`
                     }>
-                    <Image
+                    <img
                       src={normalizeImagePath(product.image as any)}
                       alt={product.name}
                       width={60}

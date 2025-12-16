@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { SquarePlay } from "lucide-react";
 import { IoCheckbox } from "react-icons/io5";
 import { IoMdArrowDropright, IoMdArrowDropdown } from "react-icons/io";
@@ -67,7 +66,7 @@ const Sidebar = ({ course, activeSection, activeLesson, fullscreen, completedLes
     <aside className="w-100 bg-white p-4 overflow-y-auto hidden lg:block sticky top-0 h-screen scrollbar-hide">
       {/* Course header */}
       <div className="flex gap-3 mb-6">
-        <Image
+        <img
           src={normalizeImagePath(course.image as any)}
           alt={course.title}
           width={100}

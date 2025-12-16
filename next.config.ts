@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const backendUrl = "/api";
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 
 const nextConfig: NextConfig = {
   images: {

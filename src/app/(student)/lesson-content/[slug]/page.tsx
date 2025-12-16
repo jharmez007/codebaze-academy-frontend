@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
 import { ScrollNavbar } from "../../../../components";
@@ -163,13 +162,12 @@ export default function CoursePage() {
           </div>
 
           <div className="w-full md:w-2/3">
-            <Image
+            <img
               src={normalizeImagePath(course.image as any)}
               alt={course.title}
               width={500}
               height={300}
               loading="eager"
-              priority
               className="rounded-lg shadow-md cursor-pointer w-full object-cover"
               sizes="(max-width: 768px) 100vw, 500px"
             />
@@ -206,7 +204,7 @@ export default function CoursePage() {
                           <NotebookText className="w-4 h-4 mr-2 font-bold" />
                         )}
                         <span
-                          className="max-w-[140px] font-extralight sm:max-w-xs text-gray-700 md:max-w-md truncate"
+                          className="max-w-[140px] font-extralight sm:max-w-md text-gray-700 md:max-w-md truncate"
                           title={lesson.title}
                         >
                           {lesson.title}
