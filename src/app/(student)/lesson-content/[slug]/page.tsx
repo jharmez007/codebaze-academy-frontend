@@ -204,7 +204,7 @@ export default function CoursePage() {
                           <NotebookText className="w-4 h-4 mr-2 font-bold" />
                         )}
                         <span
-                          className="max-w-[140px] font-extralight sm:max-w-md text-gray-700 md:max-w-md truncate"
+                          className="max-w-[140px] font-extralight text-gray-700 truncate"
                           title={lesson.title}
                         >
                           {lesson.title}
