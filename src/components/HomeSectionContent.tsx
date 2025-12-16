@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getCourses, Course } from "../services/studentCourseService";
@@ -68,12 +68,12 @@ const HomeSectionContent = () => {
               <div className="w-full md:w-2/3">
                 <Link href={`/lesson-content/${course.slug}`} 
                >
-                  <Image
+                  <img
                     src={normalizeImagePath(course.image as any)}
                     alt={course.title}
                     width={500}
                     height={300}
-                    priority={i < 2} // only pre-load top two images
+                    // priority={i < 2} // only pre-load top two images
                     className="rounded-lg shadow-md cursor-pointer object-cover transition-transform duration-300 hover:scale-[1.02]"
                   />
                 </Link>
