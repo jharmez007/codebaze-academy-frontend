@@ -83,7 +83,7 @@ const HomeSectionContent = () => {
               <div className="w-full md:w-2/3 text-center md:text-left">
                 <div className="mb-1 text-[#00bf63] font-semibold text-lg">
                   {course.price === 0
-                    ? "Free"
+                    ? "Coming Soon"
                     : `${course.currency === "USD" ? "$" : "₦"}${course.price.toLocaleString()}`}
                 </div>
                 <Link href={`/lesson-content/${course.slug}`}>
