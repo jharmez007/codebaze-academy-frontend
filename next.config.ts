@@ -1,14 +1,16 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const backendUrl = "/api";
+
+const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "api.codebazeacademy.com",
-        pathname: "/**",
+        protocol: backendUrl.startsWith("https") ? "https" : "http",
+        hostname: backendUrl.replace(/^https?:\/\//, "").split(":")[0],
       },
     ],
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
