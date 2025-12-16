@@ -12,7 +12,7 @@ export function normalizeImagePath(image?: string | File | null): string {
     // 🔥 FORCE absolute URL for backend images
     const BASE_URL =
       process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "https://www.codebazeacademy.com";
+      "https://api.codebazeacademy.com";
 
     const normalized = fixedPath.startsWith("/")
       ? fixedPath
