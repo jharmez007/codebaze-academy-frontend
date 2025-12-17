@@ -317,7 +317,7 @@ const handleResetPassword = async () => {
 
 const handleApply = async () => {
     if (!code.trim()) {
-      errorToast("Please enter a discount code");
+      infoToast("Please enter a discount code");
       return;
     }
 
