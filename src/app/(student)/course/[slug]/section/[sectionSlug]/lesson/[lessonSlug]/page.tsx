@@ -215,6 +215,8 @@ const LessonPage = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const hasQuiz = lesson.quizzes && lesson.quizzes.length > 0;
+
 
   return (
     <div className="flex max-w-7xl mx-auto min-h-screen">
@@ -294,20 +296,25 @@ const LessonPage = () => {
         </p>
 
         <button
-          onClick={() => setQuizVisible(true)}
-          disabled={!lesson.quizzes || lesson.quizzes.length === 0}
+          onClick={() => setQuizVisible((prev) => !prev)}
+          disabled={!hasQuiz}
           className={`mt-4 px-4 py-2 rounded-md transition ${
-            lesson.quizzes?.length > 0
-              ? "bg-black text-white cursor-pointer"
+            hasQuiz
+              ? "bg-black text-white hover:opacity-90"
               : "bg-gray-300 text-gray-500"
           }`}
         >
-          {lesson.quizzes?.length > 0 ? "Start Quiz" : "No Quiz Available"}
+          {!hasQuiz
+            ? "No Quiz Available"
+            : quizVisible
+            ? "Hide Quiz"
+            : "Start Quiz"}
         </button>
 
-        {quizVisible && lesson.quizzes?.length > 0 && (
+        {quizVisible && hasQuiz && (
           <div className="my-6">
             <h2 className="text-lg font-semibold mb-4">Lesson Quiz</h2>
+
             {lesson.quizzes.map((quiz: any) => (
               <QuizQuestion key={quiz.id} quiz={quiz} />
             ))}

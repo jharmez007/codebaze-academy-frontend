@@ -21,7 +21,6 @@ import {
   addComment,
   getComments,
   reactToComment,
-  getCommentReactions,
   editComment,
   deleteComment,
   reportComment,
@@ -196,14 +195,46 @@ const CommentsSection: React.FC<{ lessonId: number }> = ({ lessonId }) => {
   };
 
   // ------------------------------------------------------------
-  // React to comment
+  // React to comment (optimistic + refresh from server)
   // ------------------------------------------------------------
   const handleReact = async (id: number, type: string) => {
-    // optimistic UI
+    // Optimistic UI update
     setComments((prev) => reactRecursive(prev, id, type));
 
-    await reactToComment(id, type as any);
+    try {
+      // Call API to register reaction
+      await reactToComment(id, type as any);
+
+      // Fetch latest comments from server to ensure consistency
+      const res = await getComments(lessonId);
+      if (res.data) {
+        const mapped = res.data.map((c: any) => ({
+          id: c.id,
+          author: c.author,
+          text: c.text,
+          timestamp: c.timestamp,
+          avatar: c.avatar,
+          reactions: c.reactions || {},
+          reactedByUser: c.reactedByUser || {},
+          replies:
+            c.replies?.map((r: any) => ({
+              id: r.id,
+              author: r.author,
+              text: r.text,
+              timestamp: r.timestamp,
+              avatar: r.avatar,
+              reactions: r.reactions || {},
+              reactedByUser: r.reactedByUser || {},
+              replies: r.replies || [],
+            })) || [],
+        }));
+        setComments(mapped);
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Unable to react to comment");
+    }
   };
+
 
   // ------------------------------------------------------------
   // UI
