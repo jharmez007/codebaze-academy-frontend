@@ -2,7 +2,7 @@ import Api from "../api";
 
 // --- Add Comment ---
 export async function addComment(payload: {
-  course_id: number;
+  lesson_id: number;
   content: string;
   parent_id?: number | null;
 }) {
@@ -20,9 +20,9 @@ export async function addComment(payload: {
 }
 
 // --- Get Course Comments ---
-export async function getComments(course_id: number) {
+export async function getComments(lesson_id: number) {
   try {
-    const response = await Api.get(`/comments/course/${course_id}`);
+    const response = await Api.get(`/comments/course/${lesson_id}`);
     return { data: response.data, status: response.status };
   } catch (error: any) {
     return {
@@ -45,6 +45,25 @@ export async function reactToComment(
       reaction,
     });
     return { data: response.data, status: response.status };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error.error,
+    };
+  }
+}
+
+// --- Get Comment Reactions ---
+export async function getCommentReactions(comment_id: number) {
+  try {
+    const response = await Api.get(`/comments/${comment_id}/reactions`);
+
+    return {
+      data: response.data,
+      status: response.status,
+    };
   } catch (error: any) {
     return {
       message:

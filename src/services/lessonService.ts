@@ -45,3 +45,29 @@ export async function uncompleteLesson(lesson_id: string): Promise<{
     };
   }
 }
+
+export async function downloadLessonDocument(
+  lesson_id: number
+): Promise<{
+  data?: Blob;
+  status?: number;
+  message?: string;
+}> {
+  try {
+    const response = await Api.get(`/courses/lessons/${lesson_id}/document`, {
+      responseType: "blob",
+    });
+
+    return {
+      data: response.data,
+      status: response.status,
+    };
+  } catch (error: any) {
+    return {
+      message:
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error.error,
+    };
+  }
+}

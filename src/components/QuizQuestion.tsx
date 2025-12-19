@@ -51,7 +51,7 @@ const QuizQuestion = ({ quiz }: any) => {
         </button>
       ) : (
         <p className="mt-3 text-sm">
-          Correct Answer: <span className="font-bold">{quiz.correct_answer}</span>
+          Explanation: <span className="font-bold">{quiz.explanation}</span>
         </p>
       )}
     </div>

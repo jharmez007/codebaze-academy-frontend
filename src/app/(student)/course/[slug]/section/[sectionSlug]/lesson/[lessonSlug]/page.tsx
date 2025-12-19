@@ -9,12 +9,15 @@ import { CommentsSection } from "../../../../../../../../components/comments";
 import { useFullscreen } from "../../../../../../../../context/FullscreenContext";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Square } from "lucide-react";
-import { IoCheckboxOutline } from "react-icons/io5";
+import { IoCheckboxOutline } from "react-icons/io5"
+import { FiDownload } from "react-icons/fi";
+
 import { toast } from "sonner";
 
 import { getCourses } from "@/services/studentCourseService";
 import { getCourseId } from "@/services/studentService";
 import { markLessonComplete, uncompleteLesson } from "@/services/lessonService";
+import { downloadLessonDocument } from "@/services/lessonService";
 
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
 
@@ -194,6 +197,25 @@ const LessonPage = () => {
     ? `/course/${course.slug}/section/${section.slug}/lesson/${section.lessons[currentLessonIndex + 1].slug}`  // OTHER → NEXT LESSON
     : "#";  // LAST SECTION, LAST LESSON → DISABLED
 
+  const handleDownload = async (lessonId: number) => {
+    const res = await downloadLessonDocument(lessonId);
+
+    if (!res.data) return;
+
+    const blob = new Blob([res.data]);
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "lesson-document.pdf"; // optionally dynamic
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+
   return (
     <div className="flex max-w-7xl mx-auto min-h-screen">
       <Sidebar
@@ -238,15 +260,16 @@ const LessonPage = () => {
           )}
         </div>
 
-        {/* Links and Notes */}
+        {/* Lesson Document */}
         {lesson.document_url && (
-          <div className="flex flex-col gap-2 mb-6">
-            <Link
-              className="underline text-gray-400 hover:text-black transition ease-in"
-              href={lesson.document_url}
+          <div className="mb-6">
+            <button
+              onClick={() => handleDownload(lesson.id)}
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-black transition"
             >
-              Download Lesson Document
-            </Link>
+              <FiDownload className="w-4 h-4" />
+              <span>Download Lesson Document</span>
+            </button>
           </div>
         )}
 
@@ -272,9 +295,14 @@ const LessonPage = () => {
 
         <button
           onClick={() => setQuizVisible(true)}
-          className="mt-4 px-4 py-2 bg-black text-white rounded-md cursor-pointer"
+          disabled={!lesson.quizzes || lesson.quizzes.length === 0}
+          className={`mt-4 px-4 py-2 rounded-md transition ${
+            lesson.quizzes?.length > 0
+              ? "bg-black text-white cursor-pointer"
+              : "bg-gray-300 text-gray-500"
+          }`}
         >
-          Start Quiz
+          {lesson.quizzes?.length > 0 ? "Start Quiz" : "No Quiz Available"}
         </button>
 
         {quizVisible && lesson.quizzes?.length > 0 && (
@@ -339,7 +367,7 @@ const LessonPage = () => {
         </div>
 
         {/* Comments */}
-        <CommentsSection courseId={course.id} />
+        <CommentsSection lessonId={lesson.id} />
       </main>
     </div>
   );

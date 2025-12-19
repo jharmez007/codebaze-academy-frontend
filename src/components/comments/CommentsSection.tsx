@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
+import { toast } from "sonner"
 import ConfirmModal from "./ConfirmModal";
 import Comment from "./Comment";
 import CommentInput from "./CommentInput";
@@ -20,13 +21,14 @@ import {
   addComment,
   getComments,
   reactToComment,
+  getCommentReactions,
   editComment,
   deleteComment,
   reportComment,
 } from "@/services/commentService";
 
 
-const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
+const CommentsSection: React.FC<{ lessonId: number }> = ({ lessonId }) => {
   const currentUser = "You";
 
   const [photo, setPhoto] = useState<string | undefined>(undefined);
@@ -69,7 +71,7 @@ const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
   useEffect(() => {
     const fetchComments = async () => {
       setLoading(true);
-      const res = await getComments(courseId);
+      const res = await getComments(lessonId);
 
       if (res.data) {
         const mapped = res.data.map((c: any) => ({
@@ -102,7 +104,7 @@ const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
     };
 
     fetchComments();
-  }, [courseId]);
+  }, [lessonId]);
 
   // ------------------------------------------------------------
   // Add new comment / reply
@@ -128,7 +130,7 @@ const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
     }
 
     const res = await addComment({
-      course_id: courseId,
+      lesson_id: lessonId,
       content: text,
       parent_id: parentId || null,
     });
@@ -159,21 +161,38 @@ const CommentsSection: React.FC<{ courseId: number }> = ({ courseId }) => {
     setComments(deleteRecursive(prev, id));
 
     try {
-      await deleteComment(id);
-    } catch {
-      setComments(prev);
-    }
+      const res = await deleteComment(id);
 
-    setConfirmModal({ open: false, action: "delete", id: null });
+      if (res?.status === 200 || res?.status === 204) {
+        toast.success("Comment deleted successfully");
+      } else {
+        throw new Error(res?.message || "Failed to delete comment");
+      }
+    } catch (error: any) {
+      setComments(prev); // rollback
+      toast.error(error?.message || "Unable to delete comment");
+    } finally {
+      setConfirmModal({ open: false, action: "delete", id: null });
+    }
   };
 
   // ------------------------------------------------------------
   // Report comment
   // ------------------------------------------------------------
   const handleReportConfirm = async (id: number) => {
-    await reportComment(id, "Inappropriate content");
+    try {
+      const res = await reportComment(id, "Inappropriate content");
 
-    setConfirmModal({ open: false, action: "report", id: null });
+      if (res?.status === 200 || res?.status === 201) {
+        toast.success("Comment reported successfully");
+      } else {
+        throw new Error(res?.message || "Failed to report comment");
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Unable to report comment");
+    } finally {
+      setConfirmModal({ open: false, action: "report", id: null });
+    }
   };
 
   // ------------------------------------------------------------
