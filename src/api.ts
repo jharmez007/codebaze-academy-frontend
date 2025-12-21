@@ -6,26 +6,36 @@ const Api = axios.create({
   timeout: 10000,
 });
 
-Api.interceptors.request.use(
-  async (config) => {
-    const token = localStorage.getItem("token");
-    if (token && !config.headers["Authorization"]) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+Api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 Api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const prevRequest = error?.config;
 
-    if (error.code === "ECONNABORTED" && error.message.includes("timeout")) {
-      throw new Error("Request timed out");
+    // ⛔ Offline
+    if (!navigator.onLine) {
+      return Promise.reject({
+        type: "network",
+        message: "No internet connection. Please check your network.",
+      });
     }
 
+    // ⏱ Timeout
+    if (error.code === "ECONNABORTED") {
+      return Promise.reject({
+        type: "timeout",
+        message: "Request timed out. Please try again.",
+      });
+    }
+
+    // 🔄 Token refresh
     if (
       error?.response?.status === 401 &&
       error?.response?.data?.msg?.includes("Token has expired") &&
@@ -34,7 +44,6 @@ Api.interceptors.response.use(
       prevRequest._retry = true;
       try {
         const newAccessToken = await refreshToken();
-        console.log("newaccess_token:", newAccessToken)
         return Api({
           ...prevRequest,
           headers: {
@@ -42,11 +51,15 @@ Api.interceptors.response.use(
             Authorization: `Bearer ${newAccessToken}`,
           },
         });
-      } catch (refreshError) {
-        return Promise.reject(refreshError);
+      } catch {
+        return Promise.reject({
+          type: "auth",
+          message: "Session expired. Please log in again.",
+        });
       }
     }
 
+    // Let other errors pass through
     return Promise.reject(error);
   }
 );
