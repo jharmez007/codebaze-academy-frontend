@@ -1,47 +1,14 @@
 services:
   frontend:
-    build: ./frontend
     container_name: codebaze_frontend
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=/api
     ports:
       - "127.0.0.1:3000:3000"
-    networks:
-      - codebaze_network
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=/api
-      # Add trusted proxy header validation
-      - TRUST_PROXY=nginx
-    # Security hardening
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /app/.next/cache
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-    security_opt:
-      - no-new-privileges:true
-    user: "node"  # Run as non-root
-
-networks:
-  codebaze_network:
-    driver: bridge
-    internal: false
-# services:
-#   frontend:
-#     container_name: codebaze_frontend
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#       args:
-#         - NEXT_PUBLIC_API_URL=/api
-#     ports:
-#       - "127.0.0.1:3000:3000"
-#     networks:
-#       - codebaze_network
-#     environment:
-#       - NODE_ENV=production
-#       - NEXT_PUBLIC_API_URL=/api
-#     restart: always
+    restart: always
