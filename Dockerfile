@@ -30,14 +30,25 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
+# Create non-root user (node user already exists in alpine)
+# Ensure proper permissions
+RUN chown -R node:node /app
+
 # Copy only production output
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=node:node /app/package.json ./
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/.next ./.next
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/next.config.* ./
+
+# Create cache directory with proper permissions
+RUN mkdir -p /app/.next/cache && chown -R node:node /app/.next/cache
 
 ENV NODE_ENV=production
 EXPOSE 3000
+
+# Switch to non-root user
+USER node
 
 CMD ["npm", "start"]
 # -----------------------------
