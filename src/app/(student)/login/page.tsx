@@ -66,7 +66,7 @@ export default function LoginPage() {
                   placeholder="e.g. picard@starfleet.org"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -84,7 +84,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
               />
             </div>
 

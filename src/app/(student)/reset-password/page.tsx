@@ -142,7 +142,7 @@ function ResetPasswordPage() {
                 placeholder="Enter new password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
               />
               <p className="text-xs text-gray-600 mt-1">
                 Minimum 6 characters
@@ -165,7 +165,7 @@ function ResetPasswordPage() {
                 placeholder="Re-enter new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
               />
             </div>
 

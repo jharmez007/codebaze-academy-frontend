@@ -123,7 +123,7 @@ export default function CreateAccountPage() {
                 placeholder="e.g. John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
               />
               {isGuestUser && (
                 <p className="text-red-500 text-sm mt-1">The name "Guest User" is not allowed. Please choose another name.</p>
@@ -140,7 +140,7 @@ export default function CreateAccountPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
               />
               <p className="text-xs text-gray-600 mt-1">
                 Minimum 6 characters.

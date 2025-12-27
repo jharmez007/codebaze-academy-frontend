@@ -82,7 +82,7 @@ const HomeHero = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full sm:w-1/3 px-4 py-3 rounded-lg border bg-white text-black border-transparent shadow-md 
-                         focus:outline-none focus:ring-2 focus:ring-green-400 placeholder:text-gray-500"
+                         focus:outline-none focus:ring-2 focus:ring-green-400 placeholder:text-gray-500 text-base"
             />
 
             <input
@@ -92,7 +92,7 @@ const HomeHero = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full sm:w-1/3 px-4 py-3 rounded-lg border bg-white text-black border-transparent shadow-md 
-                         focus:outline-none focus:ring-2 focus:ring-green-400 placeholder:text-gray-500"
+                         focus:outline-none focus:ring-2 focus:ring-green-400 placeholder:text-gray-500 text-base"
             />
 
             <button

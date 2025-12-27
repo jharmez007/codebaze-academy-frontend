@@ -380,7 +380,7 @@ const handleLogout = () => {
                       value={verify}
                       onChange={handleVerifyChange}
                       placeholder="e.g. 0987"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
                     />
                     {verifyError && (
                       <p className="text-red-500 text-xs mt-2">{verifyError}</p>
@@ -429,7 +429,7 @@ const handleLogout = () => {
                           value={email}
                           onChange={handleEmailChange}
                           placeholder="e.g. picard@starfleet.org"
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
                         />
                         <div className="flex justify-end">
                           <button
@@ -457,7 +457,7 @@ const handleLogout = () => {
                           required
                           value={email}
                           disabled
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-gray-100 text-gray-500"
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-base bg-gray-100 text-gray-500"
                         />
                         <label className="block text-sm text-black mb-2 mt-4">
                           Password
@@ -468,7 +468,7 @@ const handleLogout = () => {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Enter your password"
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
+                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
                         />
                         <p className="text-xs mt-1 text-gray-500">
                           Forgot your password?{" "}
@@ -537,7 +537,7 @@ const handleLogout = () => {
                     placeholder="Discount code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
+                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
                   />
                   <button
                     onClick={handleApply}
