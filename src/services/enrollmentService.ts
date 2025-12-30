@@ -1,4 +1,4 @@
-// src/services/enrollmentService.ts
+import { errorResponseHandler } from "@/utils/auth";
 import Api from "../api";
 
 export async function enroll(
@@ -10,11 +10,7 @@ export async function enroll(
     const response = await Api.post(`/enrollments/${courseId}`, payload, config);
     return { status: response.status, message: response.data.message, full_name: response.data.full_name, has_password: response.data.has_password };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.message ||
-        error.message,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -33,12 +29,7 @@ export async function enrollRequest(
       state: response.data.state, 
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.message ||
-        error?.response?.data?.message ||
-        error.message,
-    };
+    return errorResponseHandler(error)
   }
 }
 

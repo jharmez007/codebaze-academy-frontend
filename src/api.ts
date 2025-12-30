@@ -28,11 +28,8 @@ Api.interceptors.response.use(
     }
 
     // ⏱ Timeout
-    if (error.code === "ECONNABORTED") {
-      return Promise.reject({
-        type: "timeout",
-        message: "Request timed out. Please try again.",
-      });
+    if (error.code === "ECONNABORTED" && error.message.includes("timeout") ) {
+      throw new Error("Request timed out. Please try again.")
     }
 
     // 🔄 Token refresh

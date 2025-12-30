@@ -1,4 +1,5 @@
 import Api from "../api";
+import { errorResponseHandler } from "@/utils/auth";
 
 // ---------------- GET ----------------
 export async function getPromo(): Promise<{
@@ -29,13 +30,7 @@ export async function getPromo(): Promise<{
       data: coupons,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.message ||
-        "Failed to fetch coupons",
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -50,12 +45,7 @@ export async function createPromo(
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -72,13 +62,7 @@ export async function updatePromo(
       message: response.data?.message || "Coupon updated successfully",
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.message ||
-        "Failed to update coupon",
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -93,13 +77,7 @@ export async function deletePromo(
       message: response.data?.message || "Coupon deleted successfully",
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.message ||
-        "Failed to delete coupon",
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -116,12 +94,6 @@ export async function validatePromo(
       message: response.data?.message || "Coupon validated successfully",
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.msg ||
-        error?.response?.data?.msg ||
-        error.msg ||
-        "Failed to validate coupon",
-    };
+    return errorResponseHandler(error)
   }
 }

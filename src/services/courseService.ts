@@ -1,4 +1,4 @@
-// src/services/courseApi.ts
+import { errorResponseHandler } from "@/utils/auth";
 import Api from "../api";
 
 // -----------------------------
@@ -78,12 +78,7 @@ export async function createCourse<T = unknown>(
     return { data: response.data, status: response.status };
   } catch (err) {
     const error = err as any;
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -99,12 +94,7 @@ export async function updateCourse<T = unknown>(
     return { data: response.data, status: response.status };
   } catch (err) {
     const error = err as any;
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -120,12 +110,7 @@ export async function getCourseById(
     const response = await Api.get<Course>(`/courses/${id}`);
     return { data: response.data, status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -165,12 +150,7 @@ export async function getCourses(): Promise<{
     const response = await Api.get<Course[]>("/courses/admin");
     return { data: response.data, status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -182,12 +162,7 @@ export async function deleteCourse(id: number): Promise<{
     const response = await Api.delete(`/courses/${id}`);
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -201,12 +176,7 @@ export async function publishCourse(
     });
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -221,12 +191,7 @@ export async function deleteSection(
     const response = await Api.delete(`/courses/${courseId}/sections/${sectionId}`);
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -245,12 +210,7 @@ export async function deleteLesson(
     );
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -271,12 +231,7 @@ export async function getCourseLessonById(
     const response = await Api.get<Course>(`/courses/${id}/full`);
     return { data: response.data, status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -292,12 +247,7 @@ export async function getLessonById(
     const response = await Api.get<LessonDetail>(`/courses/lessons/${id}`);
     return { data: response.data, status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -323,12 +273,7 @@ export async function updateLesson(
 
     return { status: response.status, data: response.data };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -354,12 +299,7 @@ export async function addQuiz(
     );
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -381,12 +321,7 @@ export async function updateQuiz(
     );
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -403,12 +338,7 @@ export async function deleteQuiz(
     );
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 

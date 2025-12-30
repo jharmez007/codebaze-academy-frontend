@@ -19,3 +19,16 @@ export function isTokenValid(): boolean {
     return false;
   }
 }
+
+export const errorResponseHandler = (error : any) => {
+   return {
+      message:
+        error?.response?.data?.data?.error ||
+        error?.response?.data?.error ||
+        error?.response?.data?.data?.message ||
+        error?.response?.data?.message ||
+        error?.response?.data?.data?.msg ||
+        error?.response?.data?.msg ||
+        error.error || "Something went wrong",
+    };
+}

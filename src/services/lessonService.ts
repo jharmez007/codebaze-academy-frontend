@@ -1,3 +1,4 @@
+import { errorResponseHandler } from "@/utils/auth";
 import Api from "../api";
 
 export async function markLessonComplete(
@@ -15,12 +16,7 @@ export async function markLessonComplete(
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -37,12 +33,7 @@ export async function uncompleteLesson(lesson_id: string): Promise<{
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -63,11 +54,6 @@ export async function downloadLessonDocument(
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.error ||
-        error?.response?.data?.message ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }

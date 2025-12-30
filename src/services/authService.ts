@@ -1,3 +1,4 @@
+import { errorResponseHandler } from "@/utils/auth";
 import Api from "../api";
 
 export interface LoginRequest {
@@ -26,12 +27,7 @@ export async function login(
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+     return errorResponseHandler(error)
   }
 }
 
@@ -48,12 +44,7 @@ export async function logout(): Promise<{
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -90,12 +81,7 @@ export async function register(
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -126,12 +112,7 @@ export async function verifyToken(
       message: response.data.message,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+     return errorResponseHandler(error)
   }
 }
 
@@ -150,12 +131,7 @@ export async function createPassword(
     );
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+     return errorResponseHandler(error)
   }
 }
 
@@ -175,12 +151,7 @@ export async function forgotPassword(
     );
     return { status: response.status };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -195,12 +166,7 @@ export async function verifyResetToken(
     const response = await Api.post(`/auth/verify-reset-token`, payload);
     return { status: response.status, message: response.data.message };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+     return errorResponseHandler(error)
   }
 }
 
@@ -214,12 +180,7 @@ export async function resetPassword(
     const response = await Api.post(`/auth/reset-password`, payload);
     return { status: response.status, message: response.data.message };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -230,12 +191,7 @@ export async function sendVerificationOTP(
     const response = await Api.post("/resend-verification", payload);
     return { status: response.status, message: response.data.message };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -255,12 +211,7 @@ export async function changePassword(payload: {
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -279,12 +230,7 @@ export async function changeEmail(newEmail: string): Promise<{
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
@@ -307,12 +253,7 @@ export async function verifyNewEmail(
       status: response.status,
     };
   } catch (error: any) {
-    return {
-      message:
-        error?.response?.data?.data?.error ||
-        error?.response?.data?.error ||
-        error.error,
-    };
+    return errorResponseHandler(error)
   }
 }
 
