@@ -3,7 +3,7 @@ import { refreshToken } from "./utils/refresh";
 
 const Api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
-  timeout: 10000,
+  timeout: 20000,
 });
 
 Api.interceptors.request.use((config) => {
