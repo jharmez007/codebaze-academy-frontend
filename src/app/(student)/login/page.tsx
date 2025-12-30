@@ -86,6 +86,7 @@ export default function LoginPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
+                  placeholder="••••••••"
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
                 />
