@@ -29,6 +29,6 @@ export const errorResponseHandler = (error : any) => {
         error?.response?.data?.message ||
         error?.response?.data?.data?.msg ||
         error?.response?.data?.msg ||
-        error.error || "Something went wrong",
+        error.error || "Something went wrong. Please check your network connection and try again.",
     };
 }
