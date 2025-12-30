@@ -21,20 +21,24 @@ Api.interceptors.response.use(
 
     // ⛔ Offline
     if (!navigator.onLine) {
-      return Promise.reject({
-        type: "network",
-        message: "No internet connection. Please check your network.",
-      });
+      return Promise.reject(new Error("You are offline."));
+    }
+
+    // ⛔ Network error
+    if (!error.response) {
+      return Promise.reject(
+        new Error("No internet connection. Please check your network.")
+      );
     }
 
     // ⏱ Timeout
-    if (error.code === "ECONNABORTED" && error.message.includes("timeout") ) {
-      throw new Error("Request timed out. Please try again.")
-    }
-
-    // ⛔ Offline
-    if (error?.response?.status === "(failed)net::ERR_PROXY_CONNECTION_FAILED )" ) {
-      throw new Error("No internet connection. Please check your network.")
+    if (
+      error.code === "ECONNABORTED" &&
+      error.message?.includes("timeout")
+    ) {
+      return Promise.reject(
+        new Error("Request timed out. Please try again.")
+      );
     }
 
     // 🔄 Token refresh
