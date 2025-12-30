@@ -32,6 +32,11 @@ Api.interceptors.response.use(
       throw new Error("Request timed out. Please try again.")
     }
 
+    // ⛔ Offline
+    if (error?.response?.status === "(failed)net::ERR_PROXY_CONNECTION_FAILED )" ) {
+      throw new Error("No internet connection. Please check your network.")
+    }
+
     // 🔄 Token refresh
     if (
       error?.response?.status === 401 &&
