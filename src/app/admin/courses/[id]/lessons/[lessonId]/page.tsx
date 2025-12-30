@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter  } from "next/navigation";
 import { useState, useEffect } from "react";
 import LessonEditor from "@/components/admin/courses/LessonEditor";
 import { getLessonById, updateLesson } from "@/services/courseService";
@@ -13,6 +13,9 @@ export default function LessonPage() {
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const router = useRouter();
+
 
   useEffect(() => {
     if (!lessonId) {
@@ -93,6 +96,9 @@ export default function LessonPage() {
       if (res.status === 200) {
         toast.success("Lesson updated successfully!");
         setCurrentLesson(updatedLesson);
+        setTimeout(() => {
+        router.push(`/admin/courses/${id}/lessons`); 
+      }, 800);
       } else {
         toast.error(res.message || "Failed to update lesson");
       }
