@@ -2,6 +2,7 @@
 import React from "react";
 import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { successToast, errorToast, infoToast } from "@/lib/toast";
 
 import { getCourses, getCourseById, Course } from "@/services/studentCourseService";
@@ -23,6 +24,7 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
   // Auth states
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [togglePassword, setTogglePassword] = useState(false);
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
@@ -462,14 +464,24 @@ const handleLogout = () => {
                         <label className="block text-sm text-black mb-2 mt-4">
                           Password
                         </label>
-                        <input
-                          type="password"
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="Enter your password"
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
-                        />
+                        <div className="relative">
+                          <input
+                            type={togglePassword ? "text" : "password"}
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition placeholder:text-gray-400"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setTogglePassword(!togglePassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {togglePassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
+                        </div>
                         <p className="text-xs mt-1 text-gray-500">
                           Forgot your password?{" "}
                           <button

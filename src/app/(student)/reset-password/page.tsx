@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useState, useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { verifyResetToken, resetPassword } from "@/services/authService";
 
@@ -13,6 +14,8 @@ function ResetPasswordPage() {
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -136,14 +139,24 @@ function ResetPasswordPage() {
               >
                 New Password
               </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter new password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter new password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
               <p className="text-xs text-gray-600 mt-1">
                 Minimum 6 characters
                 {!passwordValid && password.length > 0 && (
@@ -159,14 +172,24 @@ function ResetPasswordPage() {
               >
                 Confirm New Password
               </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                placeholder="Re-enter new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
-              />
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-black text-base outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <div className="mb-6 text-left">

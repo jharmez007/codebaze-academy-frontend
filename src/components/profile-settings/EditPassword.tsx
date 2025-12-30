@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 import { changePassword } from "@/services/authService"; 
 
 
@@ -12,6 +13,9 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({
   currentPassword: "",
   newPassword: "",
@@ -204,21 +208,30 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
                   >
                     Current password
                   </label>
-                  <input
-                    id="currentPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
-                      errors.currentPassword
-                        ? "border-red-500 focus:ring-red-400"
-                        : "border-gray-300 focus:ring-gray-500"
-                    }`}
-                    value={currentPassword}
-                    onChange={(e) => {
-                      setCurrentPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, currentPassword: "" }));
-                    }}
-                  />
+                  <div className="relative">
+                    <input
+                      id="currentPassword"
+                      type={showCurrentPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                        errors.currentPassword
+                          ? "border-red-500 focus:ring-red-400"
+                          : "border-gray-300 focus:ring-gray-500"
+                      }`}
+                      value={currentPassword}
+                      onChange={(e) => {
+                        setCurrentPassword(e.target.value);
+                        setErrors((prev) => ({ ...prev, currentPassword: "" }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                   {errors.currentPassword && (
                     <p className="text-red-500 text-xs mt-1">{errors.currentPassword}</p>
                   )}
@@ -231,21 +244,31 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
                   >
                     New password
                   </label>
-                  <input
-                    id="newPassword"
-                    placeholder="••••••••"
-                    type="password"
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
-                      errors.newPassword
-                        ? "border-red-500 focus:ring-red-400"
-                        : "border-gray-300 focus:ring-gray-500"
-                    }`}
-                    value={newPassword}
-                    onChange={(e) => {
-                      setNewPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, newPassword: "" }));
-                    }}
-                  />
+                  <div className="relative">
+                    <input
+                      id="newPassword"
+                      placeholder="••••••••"
+                      type={showNewPassword ? "text" : "password"}
+                      className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                        errors.newPassword
+                          ? "border-red-500 focus:ring-red-400"
+                          : "border-gray-300 focus:ring-gray-500"
+                      }`}
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        setErrors((prev) => ({ ...prev, newPassword: "" }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                   {errors.newPassword && (
                     <p className="text-red-500 text-xs mt-1">{errors.newPassword}</p>
                   )}
@@ -258,21 +281,31 @@ const EditPassword: React.FC<EditPasswordProps> = ({ activeEdit, onEdit }) => {
                   >
                     Confirm new password
                   </label>
-                  <input
-                    id="confirmPassword"
-                    placeholder="••••••••"
-                    type="password"
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
-                      errors.confirmPassword
-                        ? "border-red-500 focus:ring-red-400"
-                        : "border-gray-300 focus:ring-gray-500"
-                    }`}
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      setErrors((prev) => ({ ...prev, confirmPassword: "" }));
-                    }}
-                  />
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      placeholder="••••••••"
+                      type={showConfirmPassword ? "text" : "password"}
+                      className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+                        errors.confirmPassword
+                          ? "border-red-500 focus:ring-red-400"
+                          : "border-gray-300 focus:ring-gray-500"
+                      }`}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
                     <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
                   )}
