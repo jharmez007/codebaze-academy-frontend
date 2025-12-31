@@ -6,13 +6,20 @@ const Api = axios.create({
   timeout: 20000,
 });
 
-Api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`;
+Api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 Api.interceptors.response.use(
   (response) => response,
@@ -32,13 +39,8 @@ Api.interceptors.response.use(
     }
 
     // ⏱ Timeout
-    if (
-      error.code === "ECONNABORTED" &&
-      error.message?.includes("timeout")
-    ) {
-      return Promise.reject(
-        new Error("Request timed out. Please try again.")
-      );
+    if (error.code === "ECONNABORTED" && error.message?.includes("timeout")) {
+      return Promise.reject(new Error("Request timed out. Please try again."));
     }
 
     // 🔄 Token refresh
