@@ -16,21 +16,59 @@ import {
 import { Button } from "@/components/ui/button";
 import { Video, FileText, ListChecks } from "lucide-react";
 
-/** ✅ Converts seconds to minutes (rounded up) */
-function formatDuration(seconds: number | string): string {
-  const sec = typeof seconds === "string" ? parseInt(seconds) : seconds;
-  if (isNaN(sec) || sec <= 0) return "";
-  const minutes = Math.ceil(sec / 60);
-  return `${minutes} min${minutes > 1 ? "s" : ""}`;
+/** ✅ Converts "HH:MM:SS" or "MM:SS" to minutes (rounded up) */
+function formatDuration(duration: string): string {
+  if (!duration) return "";
+
+  const parts = duration.split(":").map(Number);
+  if (parts.some(isNaN)) return "";
+
+  let totalSeconds = 0;
+
+  if (parts.length === 3) {
+    const [hours, minutes, seconds] = parts;
+    totalSeconds = hours * 3600 + minutes * 60 + seconds;
+  } else if (parts.length === 2) {
+    const [minutes, seconds] = parts;
+    totalSeconds = minutes * 60 + seconds;
+  } else {
+    return "";
+  }
+
+  const mins = Math.ceil(totalSeconds / 60);
+  return `${mins} min${mins > 1 ? "s" : ""}`;
 }
 
-/** ✅ Converts bytes to MB (rounded to the nearest whole number) */
-function formatSize(bytes: number | string): string {
-  const b = typeof bytes === "string" ? parseFloat(bytes) : bytes;
-  if (isNaN(b) || b <= 0) return "";
-  const mb = b / (1024 * 1024);
-  return `${Math.round(mb)} MB`;
+/** ✅ Auto-detects KB / MB / GB and rounds to nearest whole number */
+function formatSize(size: string): string {
+  if (!size) return "";
+
+  const match = size.match(/([\d.]+)\s*(KB|MB|GB)?/i);
+  if (!match) return "";
+
+  const value = parseFloat(match[1]);
+  let unit = (match[2] || "MB").toUpperCase();
+
+  if (isNaN(value)) return "";
+
+  // Normalize everything to MB first
+  let sizeInMB = value;
+
+  if (unit === "KB") sizeInMB = value / 1024;
+  if (unit === "GB") sizeInMB = value * 1024;
+
+  // Decide best display unit
+  if (sizeInMB < 1) {
+    return `${Math.round(sizeInMB * 1024)} KB`;
+  }
+
+  if (sizeInMB >= 1024) {
+    return `${Math.round(sizeInMB / 1024)} GB`;
+  }
+
+  return `${Math.round(sizeInMB)} MB`;
 }
+
 
 export default function LessonsPage() {
   const { id } = useParams();

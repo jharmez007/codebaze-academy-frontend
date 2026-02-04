@@ -254,6 +254,8 @@ const LessonPage = () => {
               src={normalizeImagePath(lesson.video_url)}
               controls
               className="w-full h-full"
+              preload="metadata"
+              controlsList="nodownload"
             />
           ) : (
             <p className="text-white flex items-center justify-center h-full">

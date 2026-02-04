@@ -83,10 +83,6 @@ export default function LessonPage() {
         })
       );
 
-      if (updatedLesson.video?.file) {
-        formData.append("video", updatedLesson.video.file);
-      }
-
       if (updatedLesson.notes?.file) {
         formData.append("document", updatedLesson.notes.file);
       }

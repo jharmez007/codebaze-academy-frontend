@@ -2,10 +2,14 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import VideoUploader from "@/components/admin/courses/VideoUploader";
+
+
 import { Upload, FileText, ListChecks, PlusCircle, Trash2, Link2 } from "lucide-react";
 import {
   Select,
@@ -98,7 +102,12 @@ export default function LessonEditor({
         ? lesson.video_url
         : `${BASE_SERVER_URL}${lesson.video_url}`
       : "";
-  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoMeta, setVideoMeta] = useState<null | {
+    url: string;
+    key: string;
+    duration: number | null;
+    size: number;
+  }>(null);
   const [videoUrl, setVideoUrl] = useState(initialVideoUrl);
 
   const [notesFile, setNotesFile] = useState<File | null>(null);
@@ -135,15 +144,8 @@ export default function LessonEditor({
     setQuizzes(updated);
   };
 
-  // Video file upload
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setVideoFile(file);
-    setVideoUrl(file ? URL.createObjectURL(file) : "");
-  };
-
   const handleRemoveVideo = () => {
-    setVideoFile(null);
+    setVideoMeta(null);
     setVideoUrl("");
   };
 
@@ -176,9 +178,14 @@ export default function LessonEditor({
       notes: notesFile
         ? { type: "pdf", file: notesFile, url: notesUrl, text: notesText }
         : { url: notesUrl, text: notesText },
-      video: videoFile
-        ? { ...lesson.video, file: videoFile, url: videoUrl }
-        : { ...lesson.video, url: videoUrl },
+      video: videoMeta
+        ? {
+            url: videoMeta.url,
+            key: videoMeta.key,
+            duration: videoMeta.duration,
+            size: videoMeta.size,
+          }
+        : { url: videoUrl },
       quizzes,
     };
 
@@ -359,9 +366,15 @@ export default function LessonEditor({
           <label className="block text-sm font-medium mb-2">Upload Video</label>
           {videoUrl ? (
             <div className="relative mb-4">
-              <video controls className="w-full rounded-lg">
-                <source src={videoUrl} type="video/mp4" />
-                Your browser does not support the video tag.
+              <video 
+                controls 
+                className="w-full rounded-lg"
+                width="100%" 
+                preload="metadata"
+                controlsList="nodownload"
+              >
+                  <source src={videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
               </video>
               <button
                 type="button"
@@ -373,7 +386,14 @@ export default function LessonEditor({
               </button>
             </div>
           ) : (
-            <Input type="file" accept="video/*" onChange={handleVideoChange} />
+            <VideoUploader
+              lessonId={lesson.id}
+              onUploadSuccess={(video) => {
+                setVideoMeta(video);
+                setVideoUrl(video.url);
+                toast.success("Video uploaded successfully");
+              }}
+            />
           )}
         </TabsContent>
 
