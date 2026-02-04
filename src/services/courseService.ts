@@ -256,17 +256,21 @@ export async function getLessonById(
 // Update Course Lesson
 // -----------------------------
 export async function updateLesson(
-  courseId: number,
   lessonId: number,
-  formData: FormData
+  lessonData: {
+    title?: string;
+    notes?: string;
+    reference_link?: string;
+    document_url?: string;
+  }
 ): Promise<{ status?: number; message?: string; data?: any }> {
   try {
     const response = await Api.put(
-      `/courses/${courseId}/lessons/${lessonId}`,
-      formData,
+      `/courses/lessons/${lessonId}`,
+      lessonData,
       {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       }
     );

@@ -373,8 +373,8 @@ export default function LessonEditor({
                 preload="metadata"
                 controlsList="nodownload"
               >
-                  <source src={videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
+                <source src={videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
               </video>
               <button
                 type="button"
