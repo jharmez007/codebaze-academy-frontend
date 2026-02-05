@@ -105,7 +105,7 @@ export default function LessonsPage() {
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold">{course.title} – Lessons</h1>
-        <Link href={`/admin/courses/${course.slug}`}>
+        <Link href="/admin/courses">
           <Button variant="outline">Back to Course</Button>
         </Link>
       </div>
