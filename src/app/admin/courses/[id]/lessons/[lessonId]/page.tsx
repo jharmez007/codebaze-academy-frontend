@@ -73,12 +73,22 @@ export default function LessonPage() {
     try {
       setSaving(true);
 
-      const res = await updateLesson(Number(lessonId), {
-        title: updatedLesson.title,
-        notes: updatedLesson.notes?.text || "Updated lesson note",
-        reference_link: JSON.stringify(updatedLesson.reference_links || []),
-        document_url: updatedLesson.notes?.url || "",
-      });
+      const formData = new FormData();
+      formData.append(
+        "data",
+        JSON.stringify({
+          title: updatedLesson.title,
+          notes: updatedLesson.notes?.text || "",
+          reference_link: JSON.stringify(updatedLesson.reference_links || []),
+          document_url: updatedLesson.notes?.url || "",
+        })
+      );
+
+      if (updatedLesson.notes?.file) {
+        formData.append("document", updatedLesson.notes.file);
+      }
+
+      const res = await updateLesson(Number(lessonId), formData);
 
       if (res.status === 200) {
         toast.success("Lesson updated successfully!");
