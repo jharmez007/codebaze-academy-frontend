@@ -67,18 +67,6 @@ export function LessonFields({ control, sectionIndex, courseId }: LessonFieldsPr
 
   return (
     <div className="space-y-4">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() =>
-          append({
-            title: "",
-          })
-        }
-      >
-        + Add Lesson
-      </Button>
-
       {lessonFields.map((lesson, lessonIndex) => (
         <Card key={lesson.fieldId} className="p-3 space-y-3 bg-gray-50 dark:bg-gray-800">
           {/* Title */}
@@ -110,6 +98,19 @@ export function LessonFields({ control, sectionIndex, courseId }: LessonFieldsPr
           </Button>
         </Card>
       ))}
+      
+      {/* Add Lesson Button */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() =>
+          append({
+            title: "",
+          })
+        }
+      >
+        + Add Lesson
+      </Button>
     </div>
   );
 }
