@@ -101,7 +101,7 @@ const HomeHero = () => {
               className="bg-black text-white font-bold md:ml-8 px-8 py-4 rounded-full transition-all duration-300 ease-in-out 
                          transform hover:-translate-y-1 hover:shadow-lg disabled:opacity-50"
             >
-              {loading ? "Please wait..." : "Join Now"}
+              {loading ? "Joining..." : "Join Now"}
             </button>
           </form>
 

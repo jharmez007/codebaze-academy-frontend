@@ -618,7 +618,7 @@ const handleLogout = () => {
                   ? "bg-gray-300" // Already enrolled
                   : course.price === 0 || course.is_paid
                   ? "bg-green-600 hover:bg-green-700" // Free or paid → Enroll
-                  : "bg-gray-400 hover:bg-gray-500" // Not paid → Get now
+                  : "bg-gray-600 hover:bg-gray-700" // Not paid → Get now
               }`}
             >
               {course.is_enrolled
