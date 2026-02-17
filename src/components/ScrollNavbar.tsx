@@ -53,7 +53,7 @@ const ScrollNavbar = ({ course }: ScrollNavbarProps) => {
             href={isAuthenticated ? "/products" : `/checkout/${course.slug}`}
             className="w-full sm:w-auto text-center px-4 py-2 sm:px-6 sm:py-3 bg-[#00bf63] text-white font-semibold rounded-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
           >
-            {isAuthenticated ? "Go to Course" : "Get acces"}
+            {isAuthenticated ? "Go to Course" : "Get access"}
           </Link>
         </div>
       </div>
