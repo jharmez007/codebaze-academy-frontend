@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 type ScrollNavbarProps = {
   course: {
@@ -11,6 +12,7 @@ type ScrollNavbarProps = {
 
 const ScrollNavbar = ({ course }: ScrollNavbarProps) => {
   const [show, setShow] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,10 +50,10 @@ const ScrollNavbar = ({ course }: ScrollNavbarProps) => {
         {/* Button */}
         <div className="w-full sm:w-auto flex justify-center sm:justify-end mt-2 sm:mt-0">
           <Link
-            href={`/checkout/${course.slug}`}
+            href={isAuthenticated ? "/products" : `/checkout/${course.slug}`}
             className="w-full sm:w-auto text-center px-4 py-2 sm:px-6 sm:py-3 bg-[#00bf63] text-white font-semibold rounded-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
           >
-            Get access
+            {isAuthenticated ? "Go to Course" : "Get access"}
           </Link>
         </div>
       </div>
