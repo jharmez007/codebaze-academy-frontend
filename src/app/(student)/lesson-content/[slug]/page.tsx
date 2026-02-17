@@ -8,8 +8,6 @@ import { SquarePlay, NotebookText } from "lucide-react";
 import { getCourseById, getCourses, Course } from "@/services/studentCourseService";
 import { normalizeImagePath } from "@/utils/normalizeImagePath";
 
-import { useAuth } from "@/context/AuthContext";
-
 
 /** ✅ Converts seconds to minutes (rounded up) */
 function formatDuration(seconds: number | string): string {
@@ -31,8 +29,6 @@ export default function CoursePage() {
   const { slug } = useParams<{ slug: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
   const fetchCourse = async () => {
@@ -78,9 +74,6 @@ export default function CoursePage() {
   fetchCourse();
 }, [slug]);
 
-  // CTA depends on authentication: authenticated users see "View Course" -> /products
-  const ctaHref = isAuthenticated ? "/products" : `/checkout/${course?.slug ?? ""}`;
-  const ctaText = isAuthenticated ? "View Course" : "Buy Now";
 
   if (loading) {
     return (
@@ -160,11 +153,11 @@ export default function CoursePage() {
               {course.long_description}
             </p>
             <Link
-              href={ctaHref}
+              href={`/checkout/${course.slug}`}
               prefetch
               className="inline-block px-6 py-3 bg-[#00bf63] text-white font-semibold rounded-full transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-lg"
             >
-              {ctaText}
+              Buy Now
             </Link>
           </div>
 
