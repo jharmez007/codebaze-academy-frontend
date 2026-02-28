@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Sidebar } from "../../../../../../../../components";
 import { Breadcrumb } from "../../../../../../../../components";
 import { QuizQuestion  } from "../../../../../../../../components";
+import { VideoPlayer } from "../../../../../../../../components";
 import { CommentsSection } from "../../../../../../../../components/comments";
 import { useFullscreen } from "../../../../../../../../context/FullscreenContext";
 import Link from "next/link";
@@ -250,12 +251,13 @@ const LessonPage = () => {
         {/* Video player */}
         <div className="aspect-video bg-black mb-4 rounded-lg overflow-hidden">
           {lesson.video_url ? (
-            <video
-              src={normalizeImagePath(lesson.video_url)}
-              controls
-              className="w-full h-full"
-              preload="metadata"
-              controlsList="nodownload"
+            <VideoPlayer
+              videoUrl={normalizeImagePath(lesson.video_url)}
+              videoType={
+                lesson.video_url.includes('.m3u8')
+                  ? 'application/x-mpegURL'
+                  : undefined
+              }
             />
           ) : (
             <p className="text-white flex items-center justify-center h-full">
